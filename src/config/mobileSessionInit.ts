@@ -199,6 +199,7 @@ export function buildCapabilities(
     'appium:noReset': false,
     //...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true, 'appium:resignApp': true } : {}),
     ...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true} : {}),
+    ...(platform === 'Android' ? { 'appium:enableScreenshotUnblock': true} : {}),
     'LT:Options': ltOptions
   }, { 'appium:idleTimeout': 1800 });
 }

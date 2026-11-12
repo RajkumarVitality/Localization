@@ -3,6 +3,7 @@ import { BaseScreen } from './BaseScreen.js';
 import { ProfileScreen } from './ProfileScreen.js';
 import { ActivityScreen } from './ActivityScreen.js';
 import { HealthScreen } from './HealthScreen.js';
+import { expectedTextOptions, mobileElements } from './mobileElements.js';
 
 export class HomeScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -11,38 +12,36 @@ export class HomeScreen extends BaseScreen {
 
   async assertGreetingVisible(): Promise<void> {
     await this.assertTextContains(
-      await this.element("//*[@resource-id='vg_text_header_greeting']", "//*[@name='vg_text_header_greeting']"),
-      'Good morning',
-      'Good afternoon',
-      'Good evening'
+      await this.element(mobileElements.HomeScreen.greeting.android, mobileElements.HomeScreen.greeting.ios),
+      ...expectedTextOptions(mobileElements.HomeScreen.greeting)
     );
   }
 
   dismissNotificationPopup(): Promise<void> {
-    return this.click("//*[@resource-id='ctrl_btnok_001']", "//*[@name='ctrl_btnok_001']");
+    return this.click(mobileElements.HomeScreen.dismissNotification.android, mobileElements.HomeScreen.dismissNotification.ios);
   }
 
   acceptPermissionDialog(): Promise<void> {
-    return this.click("//*[@text='Allow']", "//*[@name='ctrl_btnallow_001']");
+    return this.click(mobileElements.HomeScreen.allowPermission.android, mobileElements.HomeScreen.allowPermission.ios);
   }
 
   async openProfileTab(): Promise<ProfileScreen> {
-    await this.click("//*[@resource-id='vg_icon_bottom_nav_bar_circle_user']", "//*[@name='vg_icon_bottom_nav_bar_circle_user']");
+    await this.click(mobileElements.HomeScreen.profileTab.android, mobileElements.HomeScreen.profileTab.ios);
     return new ProfileScreen(this.session);
   }
 
   async openActivityTab(): Promise<ActivityScreen> {
-    await this.click("//*[@resource-id='vg_icon_bottom_nav_bar_clip_board_check']", "//*[@name='vg_icon_bottom_nav_bar_clip_board_check']");
+    await this.click(mobileElements.HomeScreen.activityTab.android, mobileElements.HomeScreen.activityTab.ios);
     return new ActivityScreen(this.session);
   }
 
   async openHealthTab(): Promise<HealthScreen> {
-    await this.click("//*[@resource-id='vg_icon_bottom_nav_bar_heart']", "//*[@name='vg_icon_bottom_nav_bar_heart']");
+    await this.click(mobileElements.HomeScreen.healthTab.android, mobileElements.HomeScreen.healthTab.ios);
     return new HealthScreen(this.session);
   }
 
   async openRewardTab(): Promise<ActivityScreen> {
-    await this.click("//*[@resource-id='vg_icon_bottom_nav_bar_gift_card']", "//*[@name='vg_icon_bottom_nav_bar_gift_card']");
+    await this.click(mobileElements.HomeScreen.rewardTab.android, mobileElements.HomeScreen.rewardTab.ios);
     return new ActivityScreen(this.session);
   }
 }

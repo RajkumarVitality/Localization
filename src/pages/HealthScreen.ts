@@ -1,6 +1,7 @@
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
 import {ActivityScreen} from "./ActivityScreen.js";
+import { expectedText, mobileElements } from './mobileElements.js';
 
 export class HealthScreen extends BaseScreen {
     constructor(session: MobileSession) {
@@ -9,13 +10,13 @@ export class HealthScreen extends BaseScreen {
 
     async assertHealthHeader(): Promise<this> {
         await this.assertTextEquals(
-            await this.element("//*[@resource-id='txthealth_001']", "//*[@name='txthealth_001']"),
-            'Health'
+            await this.element(mobileElements.HealthScreen.heading.android, mobileElements.HealthScreen.heading.ios),
+            expectedText(mobileElements.HealthScreen.heading)
         );
         return this;
     }
     async scrollTillSeeAllActivity(): Promise<ActivityScreen> {
-        await this.scrollAndClick("//*[@resource-id='btn_ctrl_btnseeallactivities_001']", "//*[@name='btn_ctrl_btnseeallactivities_001']", 15);
+        await this.scrollAndClick(mobileElements.HealthScreen.seeAllActivity.android, mobileElements.HealthScreen.seeAllActivity.ios, 15);
         return new ActivityScreen(this.session);
     }
 

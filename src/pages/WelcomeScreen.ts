@@ -1,6 +1,7 @@
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
 import { HealthyLivingScreen } from './HealthyLivingScreen.js';
+import { expectedText, mobileElements } from './mobileElements.js';
 
 export class WelcomeScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -9,13 +10,13 @@ export class WelcomeScreen extends BaseScreen {
 
   async assertWelcomeMessage(): Promise<void> {
     await this.assertTextEquals(
-      await this.element("//*[@resource-id='txttheworldslargestsciencebased_001']", "//*[@name='txttheworldslargestsciencebased_001']"),
-      'The world’s largest science-based behavioural change program that rewards you for making healthier choices.'
+      await this.element(mobileElements.WelcomeScreen.welcomeMessage.android, mobileElements.WelcomeScreen.welcomeMessage.ios),
+      expectedText(mobileElements.WelcomeScreen.welcomeMessage)
     );
   }
 
   async openHealthyLiving(): Promise<HealthyLivingScreen> {
-    await this.click("//*[@resource-id='btn_btn_next']", "//*[@name='btn_btn_next']");
+    await this.click(mobileElements.WelcomeScreen.nextButton.android, mobileElements.WelcomeScreen.nextButton.ios);
     return new HealthyLivingScreen(this.session);
   }
 }

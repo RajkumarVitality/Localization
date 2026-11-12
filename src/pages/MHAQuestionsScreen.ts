@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
+import { expectedText, formatMobileLocator, mobileElements } from './mobileElements.js';
 
 interface AssessmentQuestion {
   Name: string;
@@ -28,60 +29,60 @@ export class MHAQuestionsScreen extends BaseScreen {
   }
 
   async assert1stSectionHeader(): Promise<void> {
-    await this.assertTextEquals(await this.element("//*[@resource-id='tsection_name_text']", 
-      "//*[@name='tsection_name_text']"), 'Mental health history');
+    await this.assertTextEquals(await this.element(mobileElements.MHAQuestionsScreen.firstSectionHeading.android,
+      mobileElements.MHAQuestionsScreen.firstSectionHeading.ios), expectedText(mobileElements.MHAQuestionsScreen.firstSectionHeading));
   }
 
   clickSectionNextButton(): Promise<void> {
-    return this.click("//*[@resource-id='btn_ctrl_btnnext_001']", 
-      "//*[@name='btn_ctrl_btnnext_001']");
+    return this.click(mobileElements.MHAQuestionsScreen.sectionNext.android,
+      mobileElements.MHAQuestionsScreen.sectionNext.ios);
   }
 
   clickQuestionNextButton(): Promise<void> {
-    return this.click("//*[@resource-id='btn_vg_next_button'] | //*[@resource-id='btn_vg_submit_button']",
-       "//*[@name='btn_vg_next_button'] | //*[@name='btn_vg_submit_button']");
+    return this.click(mobileElements.MHAQuestionsScreen.questionNext.android,
+       mobileElements.MHAQuestionsScreen.questionNext.ios);
   }
 
   clickSubmitAssessmentButton(): Promise<void> {
-    return this.click("//*[@resource-id='btn_vg_submit_button']", 
-      "//*[@name='btn_vg_submit_button']");
+    return this.click(mobileElements.MHAQuestionsScreen.submitAssessment.android,
+      mobileElements.MHAQuestionsScreen.submitAssessment.ios);
   }
 
   async assertUnansweredQuestionNextDisabled(expectedQuestion: string): Promise<void> {
     await this.assertQuestion(0, normalizeConfiguredText(expectedQuestion));
     const nextButton = await this.element(
-      "//*[@resource-id='btn_vg_next_button']", "//*[@name='btn_vg_next_button']"
+      mobileElements.MHAQuestionsScreen.nextButton.android, mobileElements.MHAQuestionsScreen.nextButton.ios
     );
     assert.equal(await nextButton.isEnabled(), false, 'MHA Next must be disabled before selecting an answer');
     await this.assertQuestion(0, normalizeConfiguredText(expectedQuestion));
   }
 
   closeAssessment(): Promise<void> {
-    return this.click("//*[@resource-id='vg_close_button']", "//*[@name='vg_close_button']");
+    return this.click(mobileElements.MHAQuestionsScreen.closeAssessment.android, mobileElements.MHAQuestionsScreen.closeAssessment.ios);
   }
 
   async confirmAssessmentExit(): Promise<void> {
     await this.assertTextEquals(
       await this.element(
-        "//*[@resource-id='txtareyousureyouwanttoclosethesurvey_001']",
-        "//*[@name='txtareyousureyouwanttoclosethesurvey_001']"
+        mobileElements.MHAQuestionsScreen.exitConfirmation.android,
+        mobileElements.MHAQuestionsScreen.exitConfirmation.ios
       ),
-      'Are you sure you want to exit this assessment?'
+      expectedText(mobileElements.MHAQuestionsScreen.exitConfirmation)
     );
-    await this.click("//*[@resource-id='ctrl_txtyes_001']", "//*[@name='ctrl_txtyes_001']");
+    await this.click(mobileElements.MHAQuestionsScreen.confirmExit.android, mobileElements.MHAQuestionsScreen.confirmExit.ios);
   }
 
   async assertquestions(): Promise<void> {
-    await this.assertTextEquals(await this.element("//*[@resource-id='question_0']", 
-      "//*[@name='question_0']"), 'Mental health history');
+    await this.assertTextEquals(await this.element(mobileElements.MHAQuestionsScreen.firstQuestion.android,
+      mobileElements.MHAQuestionsScreen.firstQuestion.ios), expectedText(mobileElements.MHAQuestionsScreen.firstQuestion));
   }
 
   async assertSectionName(expectedSectionName: string): Promise<void> {
-    await this.assertTextEquals(await this.element("//*[@resource-id='section_name_text']", "//*[@name='section_name_text']"), expectedSectionName);
+    await this.assertTextEquals(await this.element(mobileElements.MHAQuestionsScreen.sectionName.android, mobileElements.MHAQuestionsScreen.sectionName.ios), expectedSectionName);
   }
 
   async assertAnswer(): Promise<void> {
-    await this.assertTextEquals(await this.element("//*[@resource-id='answer_option_0']", "//*[@name='answer_option_0']"), 'Mental health history');
+    await this.assertTextEquals(await this.element(mobileElements.MHAQuestionsScreen.firstAnswer.android, mobileElements.MHAQuestionsScreen.firstAnswer.ios), expectedText(mobileElements.MHAQuestionsScreen.firstAnswer));
   }
 
   async enterAnswerAndSelect(answer: string): Promise<void> {
@@ -142,8 +143,9 @@ export class MHAQuestionsScreen extends BaseScreen {
   }
 
   private async assertQuestion(questionIndex: number, expectedQuestion: string): Promise<void> {
+    const locator = formatMobileLocator(mobileElements.MHAQuestionsScreen.questionByIndex, { index: questionIndex });
     await this.assertTextEquals(
-      await this.element(`//*[@resource-id='question_${questionIndex}']`, `~question_${questionIndex}`),
+      await this.element(locator.android, locator.ios),
       expectedQuestion
     );
   }
@@ -155,13 +157,15 @@ export class MHAQuestionsScreen extends BaseScreen {
     }
 
     const answerValue = xpathLiteral(normalizedAnswer);
-    const androidAnswerXpath = `//*[contains(@resource-id, 'answer_option_') and normalize-space(@content-desc)=${answerValue}]`;
     const labelPattern = `[ \\t\\r\\n]*${normalizedAnswer
       .split(' ')
       .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .join('[ \\t\\r\\n]+')}[ \\t\\r\\n]*`;
-    const iosAnswerSelector = `-ios predicate string:name CONTAINS "answer_option_" AND label MATCHES ${JSON.stringify(labelPattern)}`;
-    const selector = this.session.getPlatformLocator(androidAnswerXpath, iosAnswerSelector);
+    const answerLocator = formatMobileLocator(mobileElements.MHAQuestionsScreen.answerByText, {
+      answer: answerValue,
+      pattern: JSON.stringify(labelPattern)
+    });
+    const selector = this.session.getPlatformLocator(answerLocator.android, answerLocator.ios);
     this.recordStep(`Selecting answer for MHA question ${questionIndex + 1}: ${normalizedAnswer}`);
     await this.session.clickElement(selector);
   }

@@ -1,6 +1,7 @@
 import { browser } from '@wdio/globals';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
+import { expectedText, mobileElements } from './mobileElements.js';
 
 export class LoginScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -9,45 +10,45 @@ export class LoginScreen extends BaseScreen {
 
   async assertHelloVisible(): Promise<void> {
     await this.assertTextEquals(
-      await this.element("//*[@resource-id='txthello_001']", "//*[@name='txthello_001']"),
-      'Hello'
+      await this.element(mobileElements.LoginScreen.hello.android, mobileElements.LoginScreen.hello.ios),
+      expectedText(mobileElements.LoginScreen.hello)
     );
   }
 
   enterUsername(username: string): Promise<void> {
     return this.enterText(
-      "//*[@resource-id='txtlblemailaddress_001']",
-      "//*[@name='txtlblemailaddress_001']",
-      "//*[@resource-id='txtemailaddress_001_text'] | //android.widget.EditText[@focused='true'] | //android.widget.EditText[1]",
-      "//*[@name='txtemailaddress_001_text'] | //XCUIElementTypeTextField[@focused='true'] | //XCUIElementTypeTextField[1]",
+      mobileElements.LoginScreen.usernameLabel.android,
+      mobileElements.LoginScreen.usernameLabel.ios,
+      mobileElements.LoginScreen.usernameField.android,
+      mobileElements.LoginScreen.usernameField.ios,
       username
     );
   }
 
   dismissKeyboard(): Promise<void> {
-    return this.click("//*[@resource-id='txthello_001']", "//*[@name='txthello_001']");
+    return this.click(mobileElements.LoginScreen.hello.android, mobileElements.LoginScreen.hello.ios);
   }
 
   async enterPassword(password: string): Promise<void> {
-    await this.type("//*[@resource-id='txtpassword_001_text']", "//*[@name='txtpassword_001_text']", password);
+    await this.type(mobileElements.LoginScreen.passwordField.android, mobileElements.LoginScreen.passwordField.ios, password);
     await browser.pause(300);
   }
 
   submit(): Promise<void> {
-    return this.click("//*[@resource-id='btn_ctrl_btnlogin_001']", "//*[@name='btn_ctrl_btnlogin_001']");
+    return this.click(mobileElements.LoginScreen.submitButton.android, mobileElements.LoginScreen.submitButton.ios);
   }
 
   async assertIncorrectPasswordMessage(): Promise<void> {
     const text = await this.visibleText(
-      await this.element("//*[@resource-id='vg_text_popup_title']", "//*[@name='vg_text_popup_title']")
+      await this.element(mobileElements.LoginScreen.incorrectPasswordMessage.android, mobileElements.LoginScreen.incorrectPasswordMessage.ios)
     );
-    if (!text.includes('Incorrect email or password')) {
+    if (!text.includes(expectedText(mobileElements.LoginScreen.incorrectPasswordMessage))) {
       throw new Error(`Expected incorrect-password message but found: ${text}`);
     }
   }
 
   dismissIncorrectPasswordMessage(): Promise<void> {
-    return this.click("//*[@resource-id='ctrl_btngotit_001']", "//*[@name='ctrl_btngotit_001']");
+    return this.click(mobileElements.LoginScreen.gotItButton.android, mobileElements.LoginScreen.gotItButton.ios);
   }
 
   gotItButton(): Promise<void> {
@@ -56,14 +57,14 @@ export class LoginScreen extends BaseScreen {
 
   async assertLockoutMessage(): Promise<void> {
     const text = await this.visibleText(
-      await this.element("//*[@resource-id='txtunabletologincopy_001']", "//*[@name='txtunabletologincopy_001']")
+      await this.element(mobileElements.LoginScreen.lockoutMessage.android, mobileElements.LoginScreen.lockoutMessage.ios)
     );
-    if (!text.includes('Your account has been locked due to too many incorrect login attempts')) {
+    if (!text.includes(expectedText(mobileElements.LoginScreen.lockoutMessage))) {
       throw new Error(`Expected account lockout message but found: ${text}`);
     }
   }
 
   dismissLockoutMessage(): Promise<void> {
-    return this.click("//*[@resource-id='ctrl_btnok_001']", "//*[@name='ctrl_btnok_001']");
+    return this.click(mobileElements.LoginScreen.dismissLockout.android, mobileElements.LoginScreen.dismissLockout.ios);
   }
 }

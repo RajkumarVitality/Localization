@@ -20,9 +20,10 @@
     "report:open": "tsx scripts/serve-allure-report.ts"
   },
   "devDependencies": {
-    "@wdio/allure-reporter": "^9.15.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.30",
+    "@wdio/allure-reporter": "^9.15.0",
     "@wdio/cli": "^9.15.0",
     "@wdio/globals": "^9.15.0",
     "@wdio/local-runner": "^9.15.0",
@@ -37,5 +38,8 @@
   "overrides": {
     "basic-ftp": "6.2.1",
     "serialize-javascript": "7.0.5"
+  },
+  "dependencies": {
+    "js-yaml": "^4.3.2"
   }
 }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
+import { expectedText, mobileElements } from './mobileElements.js';
 
 export class SettingsScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -8,21 +9,21 @@ export class SettingsScreen extends BaseScreen {
   }
 
   async assertLoaded(): Promise<void> {
-    assert.ok(await (await this.element("//*[@resource-id='txtsettings_001']", "//*[@name='txtsettings_001']")).isDisplayed());
+    assert.ok(await (await this.element(mobileElements.SettingsScreen.heading.android, mobileElements.SettingsScreen.heading.ios)).isDisplayed());
   }
 
   scrollToLogoutAndTap(): Promise<void> {
-    return this.scrollAndClick("//*[@resource-id='ctrl_logout_001']", "//*[@name='ctrl_logout_001']", 10);
+    return this.scrollAndClick(mobileElements.SettingsScreen.logout.android, mobileElements.SettingsScreen.logout.ios, 10);
   }
 
   async assertLogoutConfirmation(): Promise<void> {
     await this.assertTextEquals(
-      await this.element("//*[@resource-id='dialog_body_areyouwanttologout_001']", "//*[@name='dialog_body_areyouwanttologout_001']"),
-      'Are you sure you want to log out?'
+      await this.element(mobileElements.SettingsScreen.logoutConfirmation.android, mobileElements.SettingsScreen.logoutConfirmation.ios),
+      expectedText(mobileElements.SettingsScreen.logoutConfirmation)
     );
   }
 
   confirmLogout(): Promise<void> {
-    return this.click("//*[@resource-id='dialog_btn1_yeslogout_001']", "//*[@name='dialog_btn1_yeslogout_001']");
+    return this.click(mobileElements.SettingsScreen.confirmLogout.android, mobileElements.SettingsScreen.confirmLogout.ios);
   }
 }

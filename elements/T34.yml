@@ -1,0 +1,303 @@
+WelcomeScreen:
+  welcomeMessage:
+    android: "//*[@resource-id='txttheworldslargestsciencebased_001']"
+    ios: "//*[@name='txttheworldslargestsciencebased_001']"
+    expected: "'s Werelds grootste wetenschappelijk onderbouwde programma voor gedragsverandering dat je beloont voor het maken van gezondere keuzes."
+  nextButton:
+    android: "//*[@resource-id='btn_btn_next']"
+    ios: "//*[@name='btn_btn_next']"
+
+HealthyLivingScreen:
+  welcomeMessage:
+    android: "//*[@resource-id='reg_welcome_txthealthliv_001']"
+    ios: "//*[@name='reg_welcome_txthealthliv_001']"
+    expected: "Gezond leven heeft nu nog meer voordelen"
+  loginButton:
+    android: "//*[@resource-id='ctrl_btnlogin_001']"
+    ios: "//*[@name='ctrl_btnlogin_001']"
+
+LoginScreen:
+  hello:
+    android: "//*[@resource-id='txthello_001']"
+    ios: "//*[@name='txthello_001']"
+    expected: "Hallo"
+  usernameLabel:
+    android: "//*[@resource-id='txtlblemailaddress_001']"
+    ios: "//*[@name='txtlblemailaddress_001']"
+  usernameField:
+    android: "//*[@resource-id='txtemailaddress_001_text'] | //android.widget.EditText[@focused='true'] | //android.widget.EditText[1]"
+    ios: "//*[@name='txtemailaddress_001_text'] | //XCUIElementTypeTextField[@focused='true'] | //XCUIElementTypeTextField[1]"
+  passwordField:
+    android: "//*[@resource-id='txtpassword_001_text']"
+    ios: "//*[@name='txtpassword_001_text']"
+  submitButton:
+    android: "//*[@resource-id='btn_ctrl_btnlogin_001']"
+    ios: "//*[@name='btn_ctrl_btnlogin_001']"
+  incorrectPasswordMessage:
+    android: "//*[@resource-id='vg_text_popup_title']"
+    ios: "//*[@name='vg_text_popup_title']"
+    expected: "Onjuist e-mailadres of wachtwoord"
+  gotItButton:
+    android: "//*[@resource-id='ctrl_btngotit_001']"
+    ios: "//*[@name='ctrl_btngotit_001']"
+  lockoutMessage:
+    android: "//*[@resource-id='txtunabletologincopy_001']"
+    ios: "//*[@name='txtunabletologincopy_001']"
+    expected: "Je account is vergrendeld door te veel foutieve aanmeldpogingen."
+  dismissLockout:
+    android: "//*[@resource-id='ctrl_btnok_001']"
+    ios: "//*[@name='ctrl_btnok_001']"
+
+HomeScreen:
+  greeting:
+    android: "//*[@resource-id='vg_text_header_greeting']"
+    ios: "//*[@name='vg_text_header_greeting']"
+    expected:
+      morning: "Goedemorgen"
+      afternoon: "Goedemiddag"
+      evening: "Goedenavond"
+  dismissNotification:
+    android: "//*[@resource-id='ctrl_btnok_001']"
+    ios: "//*[@name='ctrl_btnok_001']"
+  allowPermission:
+    android: "//*[@text='Allow']"
+    ios: "//*[@name='ctrl_btnallow_001']"
+  profileTab:
+    android: "//*[@resource-id='vg_icon_bottom_nav_bar_circle_user']"
+    ios: "//*[@name='vg_icon_bottom_nav_bar_circle_user']"
+  activityTab:
+    android: "//*[@resource-id='vg_icon_bottom_nav_bar_clip_board_check']"
+    ios: "//*[@name='vg_icon_bottom_nav_bar_clip_board_check']"
+  healthTab:
+    android: "//*[@resource-id='vg_icon_bottom_nav_bar_heart']"
+    ios: "//*[@name='vg_icon_bottom_nav_bar_heart']"
+  rewardTab:
+    android: "//*[@resource-id='vg_icon_bottom_nav_bar_gift_card']"
+    ios: "//*[@name='vg_icon_bottom_nav_bar_gift_card']"
+
+ProfileScreen:
+  settings:
+    android: "//*[@resource-id='settings_gear_icon_button']"
+    ios: "//*[@name='settings_gear_icon_button']"
+
+SettingsScreen:
+  heading:
+    android: "//*[@resource-id='txtsettings_001']"
+    ios: "//*[@name='txtsettings_001']"
+  logout:
+    android: "//*[@resource-id='ctrl_logout_001']"
+    ios: "//*[@name='ctrl_logout_001']"
+  logoutConfirmation:
+    android: "//*[@resource-id='dialog_body_areyouwanttologout_001']"
+    ios: "//*[@name='dialog_body_areyouwanttologout_001']"
+    expected: "Weet je zeker dat je wilt uitloggen?"
+  confirmLogout:
+    android: "//*[@resource-id='dialog_btn1_yeslogout_001']"
+    ios: "//*[@name='dialog_btn1_yeslogout_001']"
+
+ActivityScreen:
+  heading:
+    android: "//*[@resource-id='txtactivities_001']"
+    ios: "//*[@name='txtactivities_001']"
+    expected: "Activiteiten"
+  mhaFeedcard:
+    android: "//*[@resource-id='Mental Health Assessment Tracking Card_2']"
+    ios: "//*[@name='Mental Health Assessment Tracking Card_2']"
+  mhaPoints:
+    android: "//*[@resource-id='points_tracker_text_Mental Health Assessment Tracking Card_2']"
+    ios: "//*[@name='points_tracker_text_Mental Health Assessment Tracking Card_2']"
+    expected: "0/600 PUNTEN"
+  mhaDescription:
+    android: "//*[@resource-id='activity_card_sub_text_Mental Health Assessment Tracking Card_2']"
+    ios: "//*[@name='activity_card_sub_text_Mental Health Assessment Tracking Card_2']"
+    expected: "Invullen duurt <<minder dan 5>> minuten"
+  screeningVaccinationFeedcard:
+    android: "//*[@resource-id='Screenings Vaccinations Tracking_2']"
+    ios: "//*[@name='Screenings Vaccinations Tracking_2']"
+  screeningVaccinationPoints:
+    android: "//*[@resource-id='points_tracker_text_Screenings Vaccinations Tracking_2']"
+    ios: "//*[@name='points_tracker_text_Screenings Vaccinations Tracking_2']"
+    expected: "0/4.000 PUNTEN"
+  screeningVaccinationDescription:
+    android: "//*[@resource-id='activity_card_sub_text_Screenings Vaccinations Tracking_2']"
+    ios: "//*[@name='activity_card_sub_text_Screenings Vaccinations Tracking_2']"
+    expected: "Dien het ingevulde formulier van je zorgverlener in"
+
+HealthScreen:
+  heading:
+    android: "//*[@resource-id='txthealth_001']"
+    ios: "//*[@name='txthealth_001']"
+    expected: "Gezondheid"
+  seeAllActivity:
+    android: "//*[@resource-id='btn_ctrl_btnseeallactivities_001']"
+    ios: "//*[@name='btn_ctrl_btnseeallactivities_001']"
+
+MHALandingScreen:
+  heading:
+    android: "//*[@resource-id='txtmentalwellbeingassessment_001']"
+    ios: "//*[@name='txtmentalwellbeingassessment_001']"
+    expected: "Vragenlijst over mentale gezondheid"
+  points:
+    android: "//*[@resource-id='txtpoints_001']"
+    ios: "//*[@name='txtpoints_001']"
+    expected:
+      initial: "0/600 PUNTEN"
+      lowRisk: "300/600 PUNTEN"
+  time:
+    android: "//*[@resource-id='txttime005']"
+    ios: "//*[@name='txttime005']"
+    expected: "Invullen duurt 5 minuten"
+  startButton:
+    android: "//*[@resource-id='btnstartassessment_001'] | //*[@resource-id='btn_ctrl_btnstartassessment_001']"
+    ios: "//*[@name='btnstartassessment_001'] | //*[@name='btn_ctrl_btnstartassessment_001']"
+  understandPrivacy:
+    android: "//*[@resource-id='btn_vg_button_i_understand']"
+    ios: "//*[@name='btn_vg_button_i_understand']"
+  privacyBack:
+    android: "//*[@resource-id='vg_back_button']"
+    ios: "//*[@name='vg_back_button']"
+  completedDate:
+    android: "//*[@resource-id='txtcompleteddate_001']"
+    ios: "//*[@name='txtcompleteddate_001']"
+    expected: "Voltooid:"
+  riskType:
+    android: "//*[@resource-id='vg_risk_text']"
+    ios: "//*[@name='vg_risk_text']"
+
+MHASectionScreen:
+  startButtonEnabled:
+    android: "//*[@resource-id='btnstartassessment_001']"
+    ios: "//*[@name='btnstartassessment_001']"
+  startButton:
+    android: "//*[@resource-id='btn_ctrl_btnstart_001']"
+    ios: "//*[@name='btn_ctrl_btnstart_001']"
+  heading:
+    android: "//*[@resource-id='txtmentalwellbeingassessment_001']"
+    ios: "//*[@name='txtmentalwellbeingassessment_001']"
+    expected: "Vragenlijst over mentale gezondheid"
+
+MHAQuestionsScreen:
+  firstSectionHeading:
+    android: "//*[@resource-id='tsection_name_text']"
+    ios: "//*[@name='tsection_name_text']"
+    expected: "Voorgeschiedenis van mentale gezondheid"
+  sectionNext:
+    android: "//*[@resource-id='btn_ctrl_btnnext_001']"
+    ios: "//*[@name='btn_ctrl_btnnext_001']"
+  questionNext:
+    android: "//*[@resource-id='btn_vg_next_button']|//*[@resource-id='btn_vg_submit_button']"
+    ios: "//*[@name='btn_vg_next_button']|//*[@name='btn_vg_submit_button']"
+  submitAssessment:
+    android: "//*[@resource-id='btn_vg_submit_button']"
+    ios: "//*[@name='btn_vg_submit_button']"
+  nextButton:
+    android: "//*[@resource-id='btn_vg_next_button']"
+    ios: "//*[@name='btn_vg_next_button']"
+  closeAssessment:
+    android: "//*[@resource-id='vg_close_button']"
+    ios: "//*[@name='vg_close_button']"
+  exitConfirmation:
+    android: "//*[@resource-id='txtareyousureyouwanttoclosethesurvey_001']"
+    ios: "//*[@name='txtareyousureyouwanttoclosethesurvey_001']"
+    expected: "Weet je zeker dat je deze vragenlijst wilt afsluiten?"
+  confirmExit:
+    android: "//*[@resource-id='ctrl_txtyes_001']"
+    ios: "//*[@name='ctrl_txtyes_001']"
+  firstQuestion:
+    android: "//*[@resource-id='question_0']"
+    ios: "//*[@name='question_0']"
+    expected: "Voorgeschiedenis van mentale gezondheid"
+  sectionName:
+    android: "//*[@resource-id='section_name_text']"
+    ios: "//*[@name='section_name_text']"
+  firstAnswer:
+    android: "//*[@resource-id='answer_option_0']"
+    ios: "//*[@name='answer_option_0']"
+    expected: "Voorgeschiedenis van mentale gezondheid"
+  questionByIndex:
+    android: "//*[@resource-id='question_{index}']"
+    ios: "~question_{index}"
+  answerByText:
+    android: "//*[contains(@resource-id, 'answer_option_') and normalize-space(@content-desc)={answer}]"
+    ios: "-ios predicate string:name CONTAINS \"answer_option_\" AND label MATCHES {pattern}"
+
+MHASuccessfulCompleteScreen:
+  completionMessage:
+    android: "//*[@resource-id='txtmentalwellbeingasessmentcomplete_001']"
+    ios: "//*[@name='txtmentalwellbeingasessmentcomplete_001']"
+    expected: "Goed gedaan! Je hebt de vragenlijst over je mentale gezondheid voltooid"
+  viewResultsLabel:
+    android: "//*[@resource-id='ctrl_btncontinuetofeedback_001']"
+    ios: "//*[@name='ctrl_btncontinuetofeedback_001']"
+    expected: "Resultaten bekijken"
+  viewResultsButton:
+    android: "//*[@resource-id='btn_ctrl_btncontinuetofeedback_001']"
+    ios: "//*[@name='btn_ctrl_btncontinuetofeedback_001']"
+
+ScreeningVaccinationScreen:
+  formType:
+    android: "//*[@text='Select type' or @content-desc='Select type']"
+    ios: "//*[@name='Select type' or @label='Select type']"
+  formDate:
+    android: "//*[contains(@text, 'Date') or contains(@content-desc, 'Date')]"
+    ios: "//*[contains(@name, 'Date') or contains(@label, 'Date')]"
+  uploadControl:
+    android: "//*[@resource-id='VGUpload' or @resource-id='snv_upload_proof_image']"
+    ios: "//*[@name='VGUpload' or @name='snv_upload_proof_image']"
+  proofUploadControl:
+    android: "//*[@resource-id='VGUpload' or @resource-id='snv_upload_proof_image']"
+    ios: "//*[@name='VGUpload' or @label='VGUpload' or @name='snv_upload_proof_image' or @label='snv_upload_proof_image']"
+  openSubmissionForm:
+    android: "//*[@text='Submit form' or @content-desc='Submit form']"
+    ios: "//*[@name='Submit form' or @label='Submit form']"
+  understandPrivacy:
+    android: "//*[@text='I understand' or @content-desc='I understand']"
+    ios: "//*[@name='I understand' or @label='I understand']"
+  fluOption:
+    android: "//*[@text='Flu' or @content-desc='Flu']"
+    ios: "//*[@name='Flu' or @label='Flu']"
+  datePickerOpen:
+    android: "//*[contains(@text, 'Date') or contains(@content-desc, 'Date')]"
+    ios: "//*[@name='onTapSuffixIcon']"
+  currentDay:
+    android: "//*[@text='{day}' or @content-desc='{day}' or (contains(@content-desc, '{day},') and contains(@content-desc, 'Today'))]"
+    ios: "//*[@name='{day}' or @label='{day}' or @value='{day}' or (contains(@name, '{day},') and contains(@name, 'Today')) or (contains(@label, '{day},') and contains(@label, 'Today'))]"
+  dateConfirm:
+    android: "//*[@text='OK' or @content-desc='OK' or @text='Done' or @content-desc='Done' or @text='Select' or @content-desc='Select']"
+    ios: "//*[@name='Done' or @label='Done' or @name='Select' or @label='Select']"
+  datePickerScrim:
+    android: "//*"
+    ios: "//*[@name='Scrim' or @label='Scrim']"
+  uploadButton:
+    android: "//*[@resource-id='ctrl_btnupload_001' or @content-desc='Upload']"
+    ios: "//*[@name='ctrl_btnupload_001' or @label='Upload']"
+  selectPdf:
+    android: "//*[@text='Select PDF' or @content-desc='Select PDF']"
+    ios: "//*[@name='Select PDF' or @label='Select PDF']"
+  pdfFile:
+    android: "//*[contains(translate(@text, 'PDF', 'pdf'), '.pdf') or contains(translate(@content-desc, 'PDF', 'pdf'), '.pdf')]"
+    ios: "//*[contains(translate(@name, 'PDF', 'pdf'), '.pdf') or contains(translate(@label, 'PDF', 'pdf'), '.pdf')]"
+  galleryOption:
+    android: "//*[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery')]"
+    ios: "//*[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery')]"
+  firstGalleryImage:
+    android: "(//XCUIElementTypeImage[contains(@name, 'Photo') or contains(@label, 'Photo')])[1]"
+    ios: "(//XCUIElementTypeImage[contains(@name, 'Photo') or contains(@label, 'Photo')])[1]"
+  showRoots:
+    android: "//*[@content-desc='Show roots' or @resource-id='com.google.android.documentsui:id/home']"
+    ios: "//*[@name='Browse' or @label='Browse']"
+  downloads:
+    android: "//*[@text='Downloads' or @content-desc='Downloads']"
+    ios: "//*[@name='Downloads' or @label='Downloads']"
+  proofPng:
+    android: "//*[@text='screening-proof.png' or @content-desc='screening-proof.png']"
+    ios: "//*[@name='screening-proof.png' or @label='screening-proof.png']"
+  submitButton:
+    android: "//*[@text='Submit' or @content-desc='Submit' or @text='Submit proof' or @content-desc='Submit proof']"
+    ios: "//*[@name='Submit' or @label='Submit' or @name='Submit proof' or @label='Submit proof']"
+  submissionSuccess:
+    android: "//*[contains(translate(@text, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully') or contains(translate(@content-desc, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully')]"
+    ios: "//*[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully') or contains(translate(@label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully')]"
+  doneButton:
+    android: "//*[@text='Done' or @content-desc='Done']"
+    ios: "//*[@name='Done' or @label='Done']"

@@ -3,6 +3,7 @@ import { browser } from '@wdio/globals';
 import { deflateSync } from 'node:zlib';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
+import { formatMobileLocator, mobileElements } from './mobileElements.js';
 
 function pngChunk(type: string, data: Buffer): Buffer {
   const typeData = Buffer.from(type, 'ascii');
@@ -59,157 +60,66 @@ function createProofPngBase64(): string {
   ]).toString('base64');
 }
 
-const locators = {
-  formType: {
-    android: "//*[@text='Select type' or @content-desc='Select type']",
-    ios: "//*[@name='Select type' or @label='Select type']"
-  },
-  formDate: {
-    android: "//*[contains(@text, 'Date') or contains(@content-desc, 'Date')]",
-    ios: "//*[contains(@name, 'Date') or contains(@label, 'Date')]"
-  },
-  uploadControl: {
-    android: "//*[@resource-id='VGUpload' or @resource-id='snv_upload_proof_image']",
-    ios: "//*[@name='VGUpload' or @name='snv_upload_proof_image']"
-  },
-  proofUploadControl: {
-    android: "//*[@resource-id='VGUpload' or @resource-id='snv_upload_proof_image']",
-    ios: "//*[@name='VGUpload' or @label='VGUpload' or @name='snv_upload_proof_image' or @label='snv_upload_proof_image']"
-  },
-  openSubmissionForm: {
-    android: "//*[@text='Submit form' or @content-desc='Submit form']",
-    ios: "//*[@name='Submit form' or @label='Submit form']"
-  },
-  dataPrivacyUnderstand: {
-    android: "//*[@text='I understand' or @content-desc='I understand']",
-    ios: "//*[@name='I understand' or @label='I understand']"
-  },
-  fluOption: {
-    android: "//*[@text='Flu' or @content-desc='Flu']",
-    ios: "//*[@name='Flu' or @label='Flu']"
-  },
-  datePickerOpen: {
-    android: "//*[contains(@text, 'Date') or contains(@content-desc, 'Date')]",
-    ios: "//*[@name='onTapSuffixIcon']"
-  },
-  currentDay: (day: string) => ({
-    android: `//*[@text='${day}' or @content-desc='${day}' or (contains(@content-desc, '${day},') and contains(@content-desc, 'Today'))]`,
-    ios: `//*[@name='${day}' or @label='${day}' or @value='${day}' or (contains(@name, '${day},') and contains(@name, 'Today')) or (contains(@label, '${day},') and contains(@label, 'Today'))]`
-  }),
-  dateConfirm: {
-    android: "//*[@text='OK' or @content-desc='OK' or @text='Done' or @content-desc='Done' or @text='Select' or @content-desc='Select']",
-    ios: "//*[@name='Done' or @label='Done' or @name='Select' or @label='Select']"
-  },
-  datePickerScrim: {
-    android: "//*",
-    ios: "//*[@name='Scrim' or @label='Scrim']"
-  },
-  uploadButton: {
-    android: "//*[@resource-id='ctrl_btnupload_001' or @content-desc='Upload']",
-    ios: "//*[@name='ctrl_btnupload_001' or @label='Upload']"
-  },
-  selectPdf: {
-    android: "//*[@text='Select PDF' or @content-desc='Select PDF']",
-    ios: "//*[@name='Select PDF' or @label='Select PDF']"
-  },
-  pdfFile: {
-    android: "//*[contains(translate(@text, 'PDF', 'pdf'), '.pdf') or contains(translate(@content-desc, 'PDF', 'pdf'), '.pdf')]",
-    ios: "//*[contains(translate(@name, 'PDF', 'pdf'), '.pdf') or contains(translate(@label, 'PDF', 'pdf'), '.pdf')]"
-  },
-  galleryOption: {
-    android: "//*[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery')]",
-    ios: "//*[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery') or contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'gallery')]"
-  },
-  firstGalleryImage: {
-    android: "(//XCUIElementTypeImage[contains(@name, 'Photo') or contains(@label, 'Photo')])[1]",
-    ios: "(//XCUIElementTypeImage[contains(@name, 'Photo') or contains(@label, 'Photo')])[1]"
-  },
-  showRoots: {
-    android: "//*[@content-desc='Show roots' or @resource-id='com.google.android.documentsui:id/home']",
-    ios: "//*[@name='Browse' or @label='Browse']"
-  },
-  downloads: {
-    android: "//*[@text='Downloads' or @content-desc='Downloads']",
-    ios: "//*[@name='Downloads' or @label='Downloads']"
-  },
-  proofPng: {
-    android: "//*[@text='screening-proof.png' or @content-desc='screening-proof.png']",
-    ios: "//*[@name='screening-proof.png' or @label='screening-proof.png']"
-  },
-  submitButton: {
-    android: "//*[@text='Submit' or @content-desc='Submit' or @text='Submit proof' or @content-desc='Submit proof']",
-    ios: "//*[@name='Submit' or @label='Submit' or @name='Submit proof' or @label='Submit proof']"
-  },
-  submissionSuccess: {
-    android: "//*[contains(translate(@text, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully') or contains(translate(@content-desc, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully')]",
-    ios: "//*[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully') or contains(translate(@label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'proof submitted successfully')]"
-  },
-  doneButton: {
-    android: "//*[@text='Done' or @content-desc='Done']",
-    ios: "//*[@name='Done' or @label='Done']"
-  }
-} as const;
-
 export class ScreeningVaccinationScreen extends BaseScreen {
   constructor(session: MobileSession) {
     super(session);
   }
 
   async assertFormLoaded(): Promise<void> {
-    assert.ok(await this.isVisible(locators.formType.android, locators.formType.ios), 'Screening vaccination form type field was not displayed');
-    assert.ok(await this.isVisible(locators.formDate.android, locators.formDate.ios), 'Screening vaccination form date field was not displayed');
-    assert.ok(await this.isVisible(locators.uploadControl.android, locators.uploadControl.ios), 'Screening vaccination form upload control was not displayed');
+    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.formType.android, mobileElements.ScreeningVaccinationScreen.formType.ios), 'Screening vaccination form type field was not displayed');
+    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.formDate.android, mobileElements.ScreeningVaccinationScreen.formDate.ios), 'Screening vaccination form date field was not displayed');
+    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.uploadControl.android, mobileElements.ScreeningVaccinationScreen.uploadControl.ios), 'Screening vaccination form upload control was not displayed');
   }
 
   openSubmissionForm(): Promise<void> {
-    return this.click(locators.openSubmissionForm.android, locators.openSubmissionForm.ios);
+    return this.click(mobileElements.ScreeningVaccinationScreen.openSubmissionForm.android, mobileElements.ScreeningVaccinationScreen.openSubmissionForm.ios);
   }
 
   async acceptDataPrivacyNotice(): Promise<void> {
-    if (await this.isVisible(locators.dataPrivacyUnderstand.android, locators.dataPrivacyUnderstand.ios)) {
-      await this.click(locators.dataPrivacyUnderstand.android, locators.dataPrivacyUnderstand.ios);
+    if (await this.isVisible(mobileElements.ScreeningVaccinationScreen.understandPrivacy.android, mobileElements.ScreeningVaccinationScreen.understandPrivacy.ios)) {
+      await this.click(mobileElements.ScreeningVaccinationScreen.understandPrivacy.android, mobileElements.ScreeningVaccinationScreen.understandPrivacy.ios);
     }
   }
 
   async assertProofUploadControlVisible(): Promise<void> {
     assert.ok(
-      await this.isVisible(locators.proofUploadControl.android, locators.proofUploadControl.ios),
+      await this.isVisible(mobileElements.ScreeningVaccinationScreen.proofUploadControl.android, mobileElements.ScreeningVaccinationScreen.proofUploadControl.ios),
       'Proof upload control was not visible on the screening vaccination form'
     );
   }
 
   async selectFluType(): Promise<void> {
-    await this.click(locators.formType.android, locators.formType.ios);
-    await this.click(locators.fluOption.android, locators.fluOption.ios);
+    await this.click(mobileElements.ScreeningVaccinationScreen.formType.android, mobileElements.ScreeningVaccinationScreen.formType.ios);
+    await this.click(mobileElements.ScreeningVaccinationScreen.fluOption.android, mobileElements.ScreeningVaccinationScreen.fluOption.ios);
   }
 
   async selectCurrentDate(): Promise<void> {
-    await this.click(locators.datePickerOpen.android, locators.datePickerOpen.ios);
+    await this.click(mobileElements.ScreeningVaccinationScreen.datePickerOpen.android, mobileElements.ScreeningVaccinationScreen.datePickerOpen.ios);
 
     const today = String(new Date().getDate());
-    const dayLocator = locators.currentDay(today);
+    const dayLocator = formatMobileLocator(mobileElements.ScreeningVaccinationScreen.currentDay, { day: today });
     assert.ok(await this.isVisible(dayLocator.android, dayLocator.ios), 'Current day was not available in the date picker');
     await this.click(dayLocator.android, dayLocator.ios);
 
-    if (await this.isVisible(locators.dateConfirm.android, locators.dateConfirm.ios)) {
-      await this.click(locators.dateConfirm.android, locators.dateConfirm.ios);
+    if (await this.isVisible(mobileElements.ScreeningVaccinationScreen.dateConfirm.android, mobileElements.ScreeningVaccinationScreen.dateConfirm.ios)) {
+      await this.click(mobileElements.ScreeningVaccinationScreen.dateConfirm.android, mobileElements.ScreeningVaccinationScreen.dateConfirm.ios);
     } else if (this.session.isIOS) {
-      await this.click(locators.datePickerScrim.android, locators.datePickerScrim.ios);
+      await this.click(mobileElements.ScreeningVaccinationScreen.datePickerScrim.android, mobileElements.ScreeningVaccinationScreen.datePickerScrim.ios);
     }
   }
 
   async uploadPdfFromDevice(): Promise<void> {
-    await this.scrollAndClick(locators.uploadButton.android, locators.uploadButton.ios, 5);
-    await this.click(locators.selectPdf.android, locators.selectPdf.ios);
-    await (await this.element(locators.pdfFile.android, locators.pdfFile.ios)).click();
+    await this.scrollAndClick(mobileElements.ScreeningVaccinationScreen.uploadButton.android, mobileElements.ScreeningVaccinationScreen.uploadButton.ios, 5);
+    await this.click(mobileElements.ScreeningVaccinationScreen.selectPdf.android, mobileElements.ScreeningVaccinationScreen.selectPdf.ios);
+    await (await this.element(mobileElements.ScreeningVaccinationScreen.pdfFile.android, mobileElements.ScreeningVaccinationScreen.pdfFile.ios)).click();
   }
 
   private async uploadImageFromGallery(): Promise<void> {
-    await this.scrollAndClick(locators.uploadButton.android, locators.uploadButton.ios, 5);
-    assert.ok(await this.isVisible(locators.galleryOption.android, locators.galleryOption.ios), 'The iOS upload options did not expose a gallery choice');
-    await this.click(locators.galleryOption.android, locators.galleryOption.ios);
-    assert.ok(await this.isVisible(locators.firstGalleryImage.android, locators.firstGalleryImage.ios), 'No selectable photos were visible in the iOS gallery');
-    await this.click(locators.firstGalleryImage.android, locators.firstGalleryImage.ios);
+    await this.scrollAndClick(mobileElements.ScreeningVaccinationScreen.uploadButton.android, mobileElements.ScreeningVaccinationScreen.uploadButton.ios, 5);
+    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.galleryOption.android, mobileElements.ScreeningVaccinationScreen.galleryOption.ios), 'The iOS upload options did not expose a gallery choice');
+    await this.click(mobileElements.ScreeningVaccinationScreen.galleryOption.android, mobileElements.ScreeningVaccinationScreen.galleryOption.ios);
+    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.firstGalleryImage.android, mobileElements.ScreeningVaccinationScreen.firstGalleryImage.ios), 'No selectable photos were visible in the iOS gallery');
+    await this.click(mobileElements.ScreeningVaccinationScreen.firstGalleryImage.android, mobileElements.ScreeningVaccinationScreen.firstGalleryImage.ios);
   }
 
   async uploadPngFromDevice(): Promise<void> {
@@ -219,27 +129,27 @@ export class ScreeningVaccinationScreen extends BaseScreen {
     }
 
     await browser.pushFile('/sdcard/Download/screening-proof.png', createProofPngBase64());
-    await this.scrollAndClick(locators.uploadButton.android, locators.uploadButton.ios, 5);
-    await this.click(locators.selectPdf.android, locators.selectPdf.ios);
-    await this.click(locators.showRoots.android, locators.showRoots.ios);
-    await this.click(locators.downloads.android, locators.downloads.ios);
-    await this.click(locators.proofPng.android, locators.proofPng.ios);
+    await this.scrollAndClick(mobileElements.ScreeningVaccinationScreen.uploadButton.android, mobileElements.ScreeningVaccinationScreen.uploadButton.ios, 5);
+    await this.click(mobileElements.ScreeningVaccinationScreen.selectPdf.android, mobileElements.ScreeningVaccinationScreen.selectPdf.ios);
+    await this.click(mobileElements.ScreeningVaccinationScreen.showRoots.android, mobileElements.ScreeningVaccinationScreen.showRoots.ios);
+    await this.click(mobileElements.ScreeningVaccinationScreen.downloads.android, mobileElements.ScreeningVaccinationScreen.downloads.ios);
+    await this.click(mobileElements.ScreeningVaccinationScreen.proofPng.android, mobileElements.ScreeningVaccinationScreen.proofPng.ios);
   }
 
   submitForm(): Promise<void> {
-    return this.scrollAndClick(locators.submitButton.android, locators.submitButton.ios, 8);
+    return this.scrollAndClick(mobileElements.ScreeningVaccinationScreen.submitButton.android, mobileElements.ScreeningVaccinationScreen.submitButton.ios, 8);
   }
 
   async assertSubmissionSuccessful(): Promise<void> {
     assert.ok(
-      await this.isVisible(locators.submissionSuccess.android, locators.submissionSuccess.ios),
+      await this.isVisible(mobileElements.ScreeningVaccinationScreen.submissionSuccess.android, mobileElements.ScreeningVaccinationScreen.submissionSuccess.ios),
       'Proof submission success message was not displayed'
     );
   }
 
   async assertSubmissionBlockedWithoutProof(): Promise<void> {
     assert.equal(
-      await this.isVisible(locators.submissionSuccess.android, locators.submissionSuccess.ios),
+      await this.isVisible(mobileElements.ScreeningVaccinationScreen.submissionSuccess.android, mobileElements.ScreeningVaccinationScreen.submissionSuccess.ios),
       false,
       'Proof submission must not succeed without an uploaded proof'
     );
@@ -247,6 +157,6 @@ export class ScreeningVaccinationScreen extends BaseScreen {
   }
 
   tapDone(): Promise<void> {
-    return this.click(locators.doneButton.android, locators.doneButton.ios);
+    return this.click(mobileElements.ScreeningVaccinationScreen.doneButton.android, mobileElements.ScreeningVaccinationScreen.doneButton.ios);
   }
 }

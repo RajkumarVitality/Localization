@@ -1,6 +1,7 @@
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
 import { LoginScreen } from './LoginScreen.js';
+import { expectedText, mobileElements } from './mobileElements.js';
 
 export class HealthyLivingScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -9,13 +10,13 @@ export class HealthyLivingScreen extends BaseScreen {
 
   async assertHealthyLivingMessage(): Promise<void> {
     await this.assertTextEquals(
-      await this.element("//*[@resource-id='reg_welcome_txthealthliv_001']", "//*[@name='reg_welcome_txthealthliv_001']"),
-      'Healthy living has never been this rewarding'
+      await this.element(mobileElements.HealthyLivingScreen.welcomeMessage.android, mobileElements.HealthyLivingScreen.welcomeMessage.ios),
+      expectedText(mobileElements.HealthyLivingScreen.welcomeMessage)
     );
   }
 
   async openLogin(): Promise<LoginScreen> {
-    await this.click("//*[@resource-id='ctrl_btnlogin_001']", "//*[@name='ctrl_btnlogin_001']");
+    await this.click(mobileElements.HealthyLivingScreen.loginButton.android, mobileElements.HealthyLivingScreen.loginButton.ios);
     return new LoginScreen(this.session);
   }
 }
