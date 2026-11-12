@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { requiredSetting } from './mobileSessionInit.js';
 import { requiredUserCreationSetting, userCreationSetting } from './userCreation.js';
+import { provisioningFailure } from './provisioningFailure.js';
 
 const firstNames = ['James', 'Daniel', 'Oliver', 'Ethan', 'Noah', 'Lucas', 'Adam', 'Thomas'];
 const femaleFirstNames = ['Emma', 'Olivia', 'Sophia', 'Amelia', 'Charlotte', 'Isabella', 'Mia', 'Emily'];
@@ -39,7 +40,7 @@ export async function createPartyCore(): Promise<number> {
 
   const response = await fetch(createPartyCoreUrl, { method: 'POST' });
   if (response.status !== 201) {
-    throw new Error(`Create-party-core request expected HTTP 201 but received HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `Create-party-core request expected HTTP 201 but received HTTP ${response.status}.`);
   }
 
   const body: unknown = await response.json();
@@ -134,7 +135,8 @@ export async function enrolUser(carrierPartyId: number): Promise<EnrolledUser> {
     }
   );
   if (response.status !== 200) {
-    throw new Error(`User enrolment request expected HTTP 200 but received HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `User enrolment request expected HTTP 200 but received HTTP ${response.status}.`,
+      [carrierPartyId, firstName, familyName, email, bornOn, membershipReference, externalMembershipId]);
   }
   const responseBody: unknown = await response.json();
   const enrolment = asRecord(responseBody);
@@ -174,7 +176,8 @@ export async function registerUser(
     bornOn: user.bornOn
   });
   if (response.status !== 201) {
-    throw new Error(`User registration request expected HTTP 201 but received HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `User registration request expected HTTP 201 but received HTTP ${response.status}.`,
+      [user.userName, user.insurerCode, user.bornOn]);
   }
   return response;
 }
@@ -192,7 +195,7 @@ export async function loginUser(userName: string): Promise<Response> {
     }
   });
   if (!response.ok) {
-    throw new Error(`User login request failed with HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `User login request failed with HTTP ${response.status}.`, [userName]);
   }
   return response;
 }
@@ -234,7 +237,7 @@ export async function calculateVitalityStatus(vitalityMembershipId: number): Pro
     }
   );
   if (!response.ok) {
-    throw new Error(`Vitality status calculation request failed with HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `Vitality status calculation request failed with HTTP ${response.status}.`, [vitalityMembershipId]);
   }
   return response;
 }
@@ -304,8 +307,8 @@ async function fetchUserInstructionBody(url: string, userName: string): Promise<
       });
       if (response.ok) return await response.json();
       retryable = [502, 503, 504].includes(response.status);
-      failure = new Error(`Get-user-instruction request failed with HTTP ${response.status} at ${target}.`);
-      await response.body?.cancel();
+      failure = await provisioningFailure(response,
+        `Get-user-instruction request failed with HTTP ${response.status} at ${target}.`, [userName]);
     } catch (cause) {
       const codes = networkErrorCodes(cause);
       const timedOut = cause instanceof Error && cause.name === 'TimeoutError';
@@ -386,7 +389,7 @@ async function fetchLoginEvent(url: string, init: RequestInit, profilePrefix: st
     );
   }
   if (!response.ok) {
-    throw new Error(
+    throw await provisioningFailure(response,
       `Capture-login-events request failed with HTTP ${response.status} ` +
       `for ${profilePrefix}INTEGRATION_PLATFORM_BASE_URL at ${endpoint.origin}. ` +
       'The POST was not retried; confirm its backend outcome before replaying it.'
@@ -432,44 +435,44 @@ export async function captureLoginEvents(partyId: number, LOGIN_T_AND_C_ID: numb
   return response;
 }
 //processEventToCreateReward
-export async function processEventToCreateReward(partyId: number): Promise<Response> {
-  if (!Number.isSafeInteger(partyId) || partyId <= 0) {
-    throw new Error('Creating a reward event requires a positive integer enrolment party ID.');
-  }
-  const profilePrefix = getProfilePrefix();
-  const baseUrl = requiredUserCreationSetting(`${profilePrefix}INTEGRATION_PLATFORM_BASE_URL`).replace(/\/+$/, '');
-  const tenant = requiredUserCreationSetting(`${profilePrefix}TENANT_NUMBER`);
-  const token = requiredUserCreationSetting(`${profilePrefix}API_BEARER_TOKEN`).replace(/^Bearer\s+/i, '');
-  if (!token || token === '******') {
-    throw new Error(`Provide a valid ${profilePrefix}API_BEARER_TOKEN before creating a reward event.`);
-  }
-  const currentDateTime = getCurrentDateTime();
-  const response = await fetch(
-    `${baseUrl}/vitality-manage-rewards-service/1.0/svc/${tenant}/processEventToCreateReward`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        eventExists: false,
-        eventIn: [{
-          applicableTo: partyId,
-          eventCapturedOn: currentDateTime,
-          eventOccuredOn: currentDateTime,
-          eventSourceTypeKey: 1,
-          reportedBy: partyId,
-          typeKey: 2298
-        }]
-      })
-    }
-  );
-  if (!response.ok) {
-    throw new Error(`Create-reward-event request failed with HTTP ${response.status}.`);
-  }
-  return response;
-}
+// export async function processEventToCreateReward(partyId: number): Promise<Response> {
+//   if (!Number.isSafeInteger(partyId) || partyId <= 0) {
+//     throw new Error('Creating a reward event requires a positive integer enrolment party ID.');
+//   }
+//   const profilePrefix = getProfilePrefix();
+//   const baseUrl = requiredUserCreationSetting(`${profilePrefix}INTEGRATION_PLATFORM_BASE_URL`).replace(/\/+$/, '');
+//   const tenant = requiredUserCreationSetting(`${profilePrefix}TENANT_NUMBER`);
+//   const token = requiredUserCreationSetting(`${profilePrefix}API_BEARER_TOKEN`).replace(/^Bearer\s+/i, '');
+//   if (!token || token === '******') {
+//     throw new Error(`Provide a valid ${profilePrefix}API_BEARER_TOKEN before creating a reward event.`);
+//   }
+//   const currentDateTime = getCurrentDateTime();
+//   const response = await fetch(
+//     `${baseUrl}/vitality-manage-rewards-service/1.0/svc/${tenant}/processEventToCreateReward`,
+//     {
+//       method: 'POST',
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//         eventExists: false,
+//         eventIn: [{
+//           applicableTo: partyId,
+//           eventCapturedOn: currentDateTime,
+//           eventOccuredOn: currentDateTime,
+//           eventSourceTypeKey: 1,
+//           reportedBy: partyId,
+//           typeKey: 2298
+//         }]
+//       })
+//     }
+//   );
+//   if (!response.ok) {
+//     throw await provisioningFailure(response, `Create-reward-event request failed with HTTP ${response.status}.`, [partyId]);
+//   }
+//   return response;
+// }
 //processEvents
 export async function processEvents(partyId: number): Promise<Response> {
   if (!Number.isSafeInteger(partyId) || partyId <= 0) {
@@ -507,7 +510,7 @@ export async function processEvents(partyId: number): Promise<Response> {
     }
   );
   if (!response.ok) {
-    throw new Error(`Process-events request failed with HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `Process-events request failed with HTTP ${response.status}.`, [partyId]);
   }
   return response;
 }
@@ -552,7 +555,7 @@ export async function deleteUserInstruction(
     }
   );
   if (!response.ok) {
-    throw new Error(`Delete-user-instruction request failed with HTTP ${response.status}.`);
+    throw await provisioningFailure(response, `Delete-user-instruction request failed with HTTP ${response.status}.`, [userName, ...ids]);
   }
   return response;
 }

@@ -8,7 +8,6 @@ import {
   loginUser,
   printUserDetails,
   processEvents,
-  processEventToCreateReward,
   registerUser
 } from '../../../src/config/API-to-Create-New-User.js';
 import { requiredSetting } from '../../../src/config/mobileSessionInit.js';
@@ -118,9 +117,10 @@ export async function initializeTestAccounts(): Promise<void> {
   await provisioningStep(environment, 'Capture login events',
     '/vitality-manage-user-service-v1/1.0/svc/{tenant}/captureLoginEvents/{partyId}',
     () => captureLoginEvents(user.partyId, instructions.LOGIN_T_AND_C_ID));
-  await provisioningStep(environment, 'Create reward event',
-    '/vitality-manage-rewards-service/1.0/svc/{tenant}/processEventToCreateReward',
-    () => processEventToCreateReward(user.partyId));
+  // Reward-event creation is disabled while tenant 34 rejects this request.
+  // await provisioningStep(environment, 'Create reward event',
+  //   '/vitality-manage-rewards-service/1.0/svc/{tenant}/processEventToCreateReward',
+  //   () => processEventToCreateReward(user.partyId));
   await provisioningStep(environment, 'Process events',
     '/vitality-manage-events-service-v1/1.0/svc/{tenant}/processEvents', () => processEvents(user.partyId));
   await provisioningStep(environment, 'Delete onboarding instructions',

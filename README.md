@@ -116,7 +116,9 @@ The mental-health assessment journeys, login/logout and lockout scenarios provis
 member account in the worker's WebdriverIO `beforeSession` hook, before opening
 the cloud mobile session. Each spec receives a fresh account. Setup performs
 party creation, enrolment, registration, status calculation, login-event
-capture, reward/event processing and onboarding-instruction deletion. Setup failures
+capture, event processing and onboarding-instruction deletion. Reward-event
+creation (`processEventToCreateReward`) is currently commented out in the
+automated provisioning flow because tenant 34 rejects the request. Setup failures
 are logged with the original configuration or API error and terminate that
 worker with exit code 1 before any real mobile session is opened; there is no
 fallback to a fixed account. This explicit worker exit is necessary because
@@ -129,6 +131,11 @@ error. Logs include the configured `ZUUL_URL` for party creation, status calcula
 and instruction lookup, or `INTEGRATION_PLATFORM_BASE_URL` for other steps.
 Endpoint templates omit member IDs, and these step logs do not include
 credentials or request bodies. A failed step stops subsequent provisioning steps.
+HTTP failures also include bounded, sanitized JSON error diagnostics from the
+server (such as error codes and messages). Credentials and member identifiers
+are redacted; non-JSON, oversized and non-diagnostic response fields are omitted.
+Failure-body reads are limited to 16 KiB and five seconds, and logged details to
+2,048 characters. These diagnostics do not retry failed provisioning writes.
 Mocha suite hooks only verify that the account is ready, without provisioning again.
 The screening scenario also provisions a fresh member before opening a mobile session.
 `testAccounts.member` exposes the selected profile's `LOGIN_PREFIX` plus the generated

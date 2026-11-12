@@ -2,7 +2,7 @@ WelcomeScreen:
   welcomeMessage:
     android: "//*[@resource-id='txttheworldslargestsciencebased_001']"
     ios: "//*[@name='txttheworldslargestsciencebased_001']"
-    expected: "The world's largest science-based behavioural change program that rewards you for making healthier choices."
+    expected: "The world’s largest science-based behavioural change program that rewards you for making healthier choices."
   nextButton:
     android: "//*[@resource-id='btn_btn_next']"
     ios: "//*[@name='btn_btn_next']"

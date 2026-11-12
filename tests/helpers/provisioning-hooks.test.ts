@@ -148,7 +148,8 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
         return;
       }
       await initializeTestAccountsForSpecs([specUrl.href]);
-      assert.equal(fetchMock.mock.callCount(), 9);
+      assert.equal(fetchMock.mock.callCount(), 8);
+      assert.ok(fetchMock.mock.calls.every(call => !String(call.arguments[0]).endsWith('/processEventToCreateReward')));
       mobileSessionsStarted++;
       let bodiesRun = 0;
       let registeredTests = 0;
@@ -158,7 +159,7 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
         mobileTest.fn = async () => {
           bodiesRun++;
           assert.equal(testAccounts.member, `mdev--${email}`);
-          assert.equal(fetchMock.mock.callCount(), 9);
+          assert.equal(fetchMock.mock.callCount(), 8);
           if (file === 'incorrect-password-lockout' || file === 'screening-vaccination') {
             assert.ok(originalBody);
             assert.ok(mobileTest.ctx);
@@ -174,7 +175,7 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
       });
       assert.equal(failures, 0);
       assert.equal(bodiesRun, 1);
-      assert.equal(fetchMock.mock.callCount(), 9);
+      assert.equal(fetchMock.mock.callCount(), 8);
       assert.equal(mobileSessionsStarted, 1);
       if (file === 'screening-vaccination') {
         assert.deepEqual(usernames, [`mdev--${email}`]);

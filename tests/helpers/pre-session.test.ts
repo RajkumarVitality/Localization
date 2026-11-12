@@ -53,7 +53,7 @@ for (const outcome of ['success', 'failure', 'registration-failure', 'login-even
         ? './tests/regression/screening-vaccination.spec.ts'
         : './tests/regression/mha-unanswered.spec.ts')};
       await executeHooksWithArgs('beforeSession', config.beforeSession, [config, caps, [spec], '0-0']);
-      assert.equal(requests, 9);
+      assert.equal(requests, 8);
       assert.match(testAccounts.member, /^mdev--/);
       process.stdout.write('MOBILE_SESSION_CREATION_REACHED');
     `], {
@@ -104,8 +104,9 @@ for (const outcome of ['success', 'failure', 'registration-failure', 'login-even
     } else {
       assert.equal(result.status, 0, result.stderr);
       assert.ok(result.stdout.includes('MOBILE_SESSION_CREATION_REACHED'));
-      assert.equal((result.stdout.match(/\| START/g) ?? []).length, 9);
-      assert.equal((result.stdout.match(/\| SUCCESS/g) ?? []).length, 9);
+      assert.equal((result.stdout.match(/\| START/g) ?? []).length, 8);
+      assert.equal((result.stdout.match(/\| SUCCESS/g) ?? []).length, 8);
+      assert.doesNotMatch(result.stdout, /processEventToCreateReward/);
       assert.match(result.stdout, /Registration .* \| SUCCESS \| HTTP 201/);
       assert.match(result.stdout, /POST https:\/\/example\.invalid\/api\/tstc-integration-platform-services-service-v1\/1\.0\/register/);
       assert.match(result.stdout, /POST https:\/\/example\.invalid\/vitality-manage-vitality-status-service-1\/svc\/9998/);
