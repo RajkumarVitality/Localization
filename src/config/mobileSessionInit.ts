@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { userCreationSetting } from './userCreation.js';
 import { decodeBase64Property, loadProperties } from './properties.js';
 
 export type MobilePlatform = 'Android' | 'iOS';
@@ -189,6 +190,9 @@ export function buildCapabilities(
     ltOptions.project = project;
   }
 
+  const profile = (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toUpperCase().replace('-', '_');
+  const tenantNumber = userCreationSetting(`VG_${profile}_TENANT_NUMBER`);
+
   return Object.assign({
     platformName: platform,
     'appium:automationName': platform === 'iOS' ? 'XCUITest' : 'UiAutomator2',
@@ -197,6 +201,7 @@ export function buildCapabilities(
     'appium:app': app,
     'appium:fullReset': true,
     'appium:noReset': false,
+    ...(tenantNumber === '34' ? { 'appium:locale': 'nl', 'appium:language': 'NL' } : {}),
     //...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true, 'appium:resignApp': true } : {}),
     ...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true} : {}),
     ...(platform === 'Android' ? { 'appium:enableScreenshotUnblock': true} : {}),

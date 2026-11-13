@@ -201,6 +201,8 @@ For example, if MDEV and UAT both configure tenant `34`, entering `34` offers
 `1. MDEV  2. UAT`. Unknown tenants prompt again instead of overriding a profile.
 Press Enter at the platform or environment prompt to use the shown default.
 The selection applies to all provisioning workers without modifying the properties file.
+Mobile element locators and expected text are loaded from `elements/T<TENANT_NUMBER>.yml`
+for the selected profile, so tenant `9998` uses `T9998.yml` and tenant `34` uses `T34.yml`.
 In non-interactive CI runs, prompts are skipped; set `PLATFORM`,
 `VG_ENVIRONMENT`, and the profile-specific tenant variable (for example,
 `VG_MDEV_TENANT_NUMBER`) in the environment instead.

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { _setGlobal } from '@wdio/globals';
 import { MHAQuestionsScreen } from '../../src/pages/MHAQuestionsScreen.js';
+import { expectedText, mobileElements } from '../../src/pages/mobileElements.js';
 import { MobileSession } from '../../src/utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 
 for (const platform of ['Android', 'iOS'] as const) {
@@ -37,7 +38,7 @@ for (const platform of ['Android', 'iOS'] as const) {
     t.mock.method(session, 'clickElement', async (selector: string) => { clicks.push(selector); });
     _setGlobal('$', async () => ({
       isDisplayed: async () => true,
-      getAttribute: async () => 'Are you sure you want to exit this assessment?'
+      getAttribute: async () => expectedText(mobileElements.MHAQuestionsScreen.exitConfirmation)
     }));
     const screen = new MHAQuestionsScreen(session);
     await screen.closeAssessment();

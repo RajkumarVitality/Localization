@@ -4,13 +4,16 @@ import { MHAQuestionsScreen } from '../../src/pages/MHAQuestionsScreen.js';
 import { MHASectionScreen } from '../../src/pages/MHASectionScreen.js';
 import { assertTestAccountReady, testAccounts } from '../helpers/user_helpers/TestUser.js';
 import { loginToHome } from '../helpers/genericFlow.js';
+import {ActivityScreen} from "../../src/pages/ActivityScreen.js";
 
 describe('mental health assessment required answer validation', () => {
   before('verify pre-session member account', assertTestAccountReady);
 
   it('keeps Next disabled before the first required answer is selected', async () => {
     const { session, homeScreen } = await loginToHome(testAccounts.member);
-    const activityScreen = await homeScreen.openActivityTab();
+    const activityScreen: ActivityScreen = await homeScreen.openSeeAllActivities();
+    executionReporter.log('Opened See All Activities.');
+    // const activityScreen = await homeScreen.openActivityTab();
     await activityScreen.assertActivityHeader();
     const landingScreen = await activityScreen.openMHAFeedcard();
     await landingScreen.assertMHAScreenHeader();

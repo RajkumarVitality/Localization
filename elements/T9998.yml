@@ -74,6 +74,10 @@ HomeScreen:
   rewardTab:
     android: "//*[@resource-id='vg_icon_bottom_nav_bar_gift_card']"
     ios: "//*[@name='vg_icon_bottom_nav_bar_gift_card']"
+  seeAllActivities:
+    android: "//*[@resource-id='txthealthcheck_002']"
+    ios: "//*[@name='txthealthcheck_002']"
+
 
 ProfileScreen:
   settings:

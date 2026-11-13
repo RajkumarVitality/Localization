@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { load } from 'js-yaml';
+import { userCreationSetting } from '../config/userCreation.js';
 
 export interface MobileLocator {
   android: string;
@@ -33,13 +34,24 @@ function isMobileElementCatalog(value: unknown): value is MobileElementCatalog {
   );
 }
 
-const catalog = load(readFileSync(new URL('../../elements/T9998.yml', import.meta.url), 'utf8'));
-
-if (!isMobileElementCatalog(catalog)) {
-  throw new TypeError('Invalid mobile element catalog: locators require Android and iOS selectors, with optional expected text or named text variants');
+function configuredTenantNumber(): string {
+  const profile = (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toUpperCase().replace('-', '_');
+  return userCreationSetting(`VG_${profile}_TENANT_NUMBER`) ?? '9998';
 }
 
-export const mobileElements = catalog;
+export function loadMobileElementCatalog(tenantNumber: string): MobileElementCatalog {
+  if (!/^\d+$/.test(tenantNumber)) {
+    throw new TypeError(`Invalid mobile element tenant number: ${tenantNumber}`);
+  }
+
+  const catalog = load(readFileSync(new URL(`../../elements/T${tenantNumber}.yml`, import.meta.url), 'utf8'));
+  if (!isMobileElementCatalog(catalog)) {
+    throw new TypeError('Invalid mobile element catalog: locators require Android and iOS selectors, with optional expected text or named text variants');
+  }
+  return catalog;
+}
+
+export const mobileElements = loadMobileElementCatalog(configuredTenantNumber());
 
 export function expectedText(locator: MobileLocator, variant?: string): string {
   const expected = locator.expected;

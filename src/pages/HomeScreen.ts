@@ -4,6 +4,7 @@ import { ProfileScreen } from './ProfileScreen.js';
 import { ActivityScreen } from './ActivityScreen.js';
 import { HealthScreen } from './HealthScreen.js';
 import { expectedTextOptions, mobileElements } from './mobileElements.js';
+import {ScreeningVaccinationScreen} from "./ScreeningVaccinationScreen.js";
 
 export class HomeScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -44,4 +45,10 @@ export class HomeScreen extends BaseScreen {
     await this.click(mobileElements.HomeScreen.rewardTab.android, mobileElements.HomeScreen.rewardTab.ios);
     return new ActivityScreen(this.session);
   }
+
+  async openSeeAllActivities(): Promise<ActivityScreen> {
+    await this.scrollAndClick(mobileElements.HomeScreen.seeAllActivities.android, mobileElements.HomeScreen.seeAllActivities.ios, 15);
+    return new ActivityScreen(this.session);
+  }
+
 }

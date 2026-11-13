@@ -14,8 +14,11 @@ describe('high-risk mental health assessment journey', () => {
     executionReporter.log('MHA_Validate the High Risk assessment.');
     const { session, homeScreen } = await loginToHome(testAccounts.member);
 
-    const activityScreen: ActivityScreen = await homeScreen.openActivityTab();
-    executionReporter.log('Opened activity tab.');
+    const activityScreen: ActivityScreen = await homeScreen.openSeeAllActivities();
+    executionReporter.log('Opened See All Activities.');
+
+    // const activityScreen: ActivityScreen = await homeScreen.openActivityTab();
+    // executionReporter.log('Opened activity tab.');
     await activityScreen.assertActivityHeader();
     executionReporter.log('Validated activity header.');
     const mhaScreen: MHALandingScreen = await activityScreen.openMHAFeedcard();

@@ -1,13 +1,16 @@
 import { executionReporter } from '../../src/utils/ExecutionReporter.js';
 import { assertTestAccountReady, testAccounts } from '../helpers/user_helpers/TestUser.js';
 import { loginToHome } from '../helpers/genericFlow.js';
+import {ActivityScreen} from "../../src/pages/ActivityScreen.js";
 
 describe('mental health assessment privacy consent cancellation', () => {
   before('verify pre-session member account', assertTestAccountReady);
 
   it('returns to MHA landing when the privacy notice is cancelled', async () => {
     const { homeScreen } = await loginToHome(testAccounts.member);
-    const activityScreen = await homeScreen.openActivityTab();
+    const activityScreen: ActivityScreen = await homeScreen.openSeeAllActivities();
+    executionReporter.log('Opened See All Activities.');
+    // const activityScreen = await homeScreen.openActivityTab();
     await activityScreen.assertActivityHeader();
     const landingScreen = await activityScreen.openMHAFeedcard();
     await landingScreen.assertMHAScreenHeader();

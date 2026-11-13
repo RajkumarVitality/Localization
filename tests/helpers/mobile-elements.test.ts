@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { expectedText, expectedTextOptions, formatMobileLocator, mobileElements } from '../../src/pages/mobileElements.js';
+import {
+  expectedText,
+  expectedTextOptions,
+  formatMobileLocator,
+  loadMobileElementCatalog,
+  mobileElements
+} from '../../src/pages/mobileElements.js';
 import { _setGlobal } from '@wdio/globals';
 import { LoginScreen } from '../../src/pages/LoginScreen.js';
 import { HomeScreen } from '../../src/pages/HomeScreen.js';
@@ -25,12 +31,17 @@ test('formats question locators from the central catalog', () => {
 });
 
 test('reads expected text and state variants beside their element locators', () => {
-  assert.equal(expectedText(mobileElements.WelcomeScreen.welcomeMessage),
+  const tenant9998 = loadMobileElementCatalog('9998');
+  const tenant34 = loadMobileElementCatalog('34');
+  assert.equal(expectedText(tenant9998.WelcomeScreen.welcomeMessage),
     'The world\u2019s largest science-based behavioural change program that rewards you for making healthier choices.');
-  assert.equal(expectedText(mobileElements.LoginScreen.hello), 'Hello');
-  assert.equal(expectedText(mobileElements.MHALandingScreen.points, 'initial'), '0/600 POINTS');
-  assert.equal(expectedText(mobileElements.MHALandingScreen.points, 'lowRisk'), '300/600 POINTS');
-  assert.deepEqual(expectedTextOptions(mobileElements.HomeScreen.greeting),
+  assert.equal(expectedText(tenant9998.LoginScreen.hello), 'Hello');
+  assert.equal(expectedText(tenant34.WelcomeScreen.welcomeMessage),
+    "'s Werelds grootste wetenschappelijk onderbouwde programma voor gedragsverandering dat je beloont voor het maken van gezondere keuzes.");
+  assert.equal(expectedText(tenant34.LoginScreen.hello), 'Hallo');
+  assert.equal(expectedText(tenant9998.MHALandingScreen.points, 'initial'), '0/600 POINTS');
+  assert.equal(expectedText(tenant9998.MHALandingScreen.points, 'lowRisk'), '300/600 POINTS');
+  assert.deepEqual(expectedTextOptions(tenant9998.HomeScreen.greeting),
     ['Good morning', 'Good afternoon', 'Good evening']);
 });
 

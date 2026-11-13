@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { _setGlobal } from '@wdio/globals';
 import { MHAQuestionsScreen } from '../../src/pages/MHAQuestionsScreen.js';
+import { formatMobileLocator, mobileElements } from '../../src/pages/mobileElements.js';
 import { MobileSession } from '../../src/utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { executionReporter } from '../../src/utils/ExecutionReporter.js';
 
@@ -29,7 +30,7 @@ for (const platform of ['iOS', 'Android'] as const) {
     });
     assert.equal(calls.length, 3);
     if (platform === 'iOS') {
-      assert.equal(calls[0], '~question_0');
+      assert.equal(calls[0], formatMobileLocator(mobileElements.MHAQuestionsScreen.questionByIndex, { index: 0 }).ios);
       assert.ok(calls[1].startsWith('-ios predicate string:name CONTAINS "answer_option_" AND label MATCHES '));
       const pattern = JSON.parse(calls[1].split('label MATCHES ')[1]) as string;
       const regex = new RegExp(`^(?:${pattern})$`);
@@ -37,7 +38,7 @@ for (const platform of ['iOS', 'Android'] as const) {
       assert.ok(regex.test(`  ${answer.replaceAll(' ', '\t')} \n`));
       assert.equal(regex.test('different answer'), false);
       assert.equal(regex.test(answer.replace('(often).', 'oftenX')), false);
-      assert.equal(calls[2], '~btn_vg_submit_button');
+      assert.equal(calls[2], mobileElements.MHAQuestionsScreen.submitAssessment.ios);
     } else {
       assert.equal(calls[0], "//*[@resource-id='question_0']");
       assert.ok(calls[1].includes('normalize-space(@content-desc)=concat('));
@@ -72,9 +73,9 @@ for (const finalType of ['selectfield', 'information']) {
         ]
       }
     });
-    assert.equal(clicks.filter(selector => selector === '~btn_vg_next_button').length, 2);
-    assert.equal(clicks.filter(selector => selector === '~btn_vg_submit_button').length, 1);
-    assert.equal(clicks[clicks.length - 1], '~btn_vg_submit_button');
-    assert.ok(clicks[1].includes('btn_ctrl_btnnext_001'));
+    assert.equal(clicks.filter(selector => selector === mobileElements.MHAQuestionsScreen.questionNext.ios).length, 2);
+    assert.equal(clicks.filter(selector => selector === mobileElements.MHAQuestionsScreen.submitAssessment.ios).length, 1);
+    assert.equal(clicks[clicks.length - 1], mobileElements.MHAQuestionsScreen.submitAssessment.ios);
+    assert.equal(clicks[1], mobileElements.MHAQuestionsScreen.sectionNext.ios);
   });
 }
