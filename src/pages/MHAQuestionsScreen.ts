@@ -1,27 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
+import { loadAssessmentResource, type AssessmentDocument } from '../config/assessmentResource.js';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
 import { expectedText, formatMobileLocator, mobileElements } from './mobileElements.js';
-
-interface AssessmentQuestion {
-  Name: string;
-  Type: string;
-  Values?: string[];
-}
-
-interface AssessmentSection {
-  Name: string;
-  Questions: AssessmentQuestion[];
-}
-
-interface AssessmentDocument {
-  'Mental health assessment': {
-    Count: number;
-    Sections: AssessmentSection[];
-  };
-}
 
 export class MHAQuestionsScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -132,14 +113,7 @@ export class MHAQuestionsScreen extends BaseScreen {
   }
 
   async completeAssessmentFromResource(resourceName: string): Promise<void> {
-    if (!resourceName.trim()) {
-      throw new TypeError('Assessment resource name must not be blank');
-    }
-
-    const fileName = path.basename(resourceName);
-    const resourcePath = new URL(`../../tests/fixtures/${fileName}`, import.meta.url);
-    const assessment = JSON.parse(await readFile(resourcePath, 'utf8')) as AssessmentDocument;
-    await this.completeAssessment(assessment);
+    await this.completeAssessment(await loadAssessmentResource(resourceName));
   }
 
   private async assertQuestion(questionIndex: number, expectedQuestion: string): Promise<void> {

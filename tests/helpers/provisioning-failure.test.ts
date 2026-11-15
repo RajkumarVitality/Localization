@@ -22,6 +22,20 @@ test('provisioning failures include diagnostic JSON but redact secrets and membe
   assert.doesNotMatch(error.message, /40189132|member@example|Jane|private-test-token|must-not-log|[\r\n]/);
 });
 
+test('provisioning failures redact the separate MDEV-9998 credentials', async t => {
+  const previous = process.env.VG_T9998_MDEV_API_BEARER_TOKEN;
+  process.env.VG_T9998_MDEV_API_BEARER_TOKEN = 'tenant-specific-test-secret';
+  t.after(() => {
+    if (previous === undefined) delete process.env.VG_T9998_MDEV_API_BEARER_TOKEN;
+    else process.env.VG_T9998_MDEV_API_BEARER_TOKEN = previous;
+  });
+  const error = await provisioningFailure(Response.json({
+    message: 'Failure contains tenant-specific-test-secret'
+  }), 'HTTP 400.');
+  assert.doesNotMatch(error.message, /tenant-specific-test-secret/);
+  assert.match(error.message, /\[REDACTED\]/);
+});
+
 test('failure response bodies are omitted safely when empty, non-JSON or oversized', async () => {
   for (const [body, expected] of [
     ['', /empty/],

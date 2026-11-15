@@ -46,6 +46,7 @@ const page = `<!doctype html>
           <option value="ca-test">ca-test</option>
           <option value="ca-dev">dev (ca-dev)</option>
           <option value="mdev">mdev</option>
+          <option value="mdev-9998">mdev-9998</option>
           <option value="uat">uat</option>
         </select>
       </label>
@@ -127,7 +128,7 @@ function parseFilter(input: unknown): AllureResultFilter {
     throw new Error('End date must be on or after the start date.');
   }
   if (values.environment !== undefined) {
-    if (typeof values.environment !== 'string' || !['ca-test', 'ca-dev', 'mdev', 'uat'].includes(values.environment)) {
+    if (typeof values.environment !== 'string' || !['ca-test', 'ca-dev', 'mdev', 'mdev-9998', 'uat'].includes(values.environment)) {
       throw new Error('Select a valid environment.');
     }
     filter.environment = values.environment;

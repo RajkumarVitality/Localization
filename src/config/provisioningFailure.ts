@@ -12,7 +12,7 @@ export async function provisioningFailure(
   privateValues: Array<string | number> = []
 ): Promise<Error> {
   const secrets = [...privateValues.map(String), setting('APP_PASSWORD') ?? ''];
-  for (const profile of ['MDEV', 'CA_TEST', 'CA_DEV', 'UAT']) {
+  for (const profile of ['MDEV', 'T9998_MDEV', 'CA_TEST', 'CA_DEV', 'UAT']) {
     for (const suffix of ['API_BEARER_TOKEN', 'API_BASIC_AUTH']) {
       const value = userCreationSetting(`VG_${profile}_${suffix}`);
       if (value) secrets.push(value, value.replace(/^(Basic|Bearer)\s+/i, ''));

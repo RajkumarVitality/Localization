@@ -2,10 +2,7 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { userCreationSetting } from '../src/config/userCreation.js';
-
-export type MobileEnvironment = 'ca-test' | 'ca-dev' | 'mdev' | 'uat';
-const mobileEnvironments: MobileEnvironment[] = ['ca-test', 'ca-dev', 'mdev', 'uat'];
+import { mobileEnvironments, userCreationProfilePrefix, userCreationSetting, type MobileEnvironment } from '../src/config/userCreation.js';
 
 export function parsePlatformSelection(value: string): 'Android' | 'iOS' | undefined {
   switch (value.trim().toLowerCase()) {
@@ -35,6 +32,9 @@ export function parseEnvironmentSelection(value: string): MobileEnvironment | un
     case '4':
     case 'uat':
       return 'uat';
+    case '5':
+    case 'mdev-9998':
+      return 'mdev-9998';
     default:
       return undefined;
   }
@@ -63,7 +63,7 @@ export async function promptForRunConfiguration(
   do {
     tenant = (await question('Enter TENANT_NUMBER: ')).trim();
     matches = mobileEnvironments.filter(profile => {
-      const key = `VG_${profile.toUpperCase().replace('-', '_')}_TENANT_NUMBER`;
+      const key = `${userCreationProfilePrefix(profile)}TENANT_NUMBER`;
       return tenant && (environment[key]?.trim() || setting(key)?.trim()) === tenant;
     });
     if (!matches.length) {
@@ -99,7 +99,7 @@ export async function promptForRunConfiguration(
   environment.PLATFORM = platform;
   environment.VG_ENVIRONMENT = profile;
   environment.appId = appId;
-  environment[`VG_${profile.toUpperCase().replace('-', '_')}_TENANT_NUMBER`] = tenant;
+  environment[`${userCreationProfilePrefix(profile)}TENANT_NUMBER`] = tenant;
 }
 
 async function askUntilValid<T>(

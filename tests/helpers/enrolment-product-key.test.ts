@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { enrolUser } from '../../src/config/API-to-Create-New-User.js';
 
-for (const [profile, productKey] of [['mdev', '7'], ['uat', '3']]) {
+for (const [profile, productKey, tenant] of [['mdev', '7', '34'], ['mdev-9998', '8', '9998'], ['uat', '3', '34']]) {
   test(`enrolment uses the ${profile} product key`, async t => {
-    const prefix = `VG_${profile.toUpperCase()}_`;
+    const prefix = profile === 'mdev-9998' ? 'VG_T9998_MDEV_' : `VG_${profile.toUpperCase()}_`;
     const settings = {
       VG_ENVIRONMENT: profile,
       [`${prefix}INTEGRATION_PLATFORM_BASE_URL`]: 'https://example.invalid/api',
-      [`${prefix}TENANT_NUMBER`]: '34',
+      [`${prefix}TENANT_NUMBER`]: tenant,
       [`${prefix}API_BEARER_TOKEN`]: 'test-token',
       [`${prefix}EMAIL_DOMAIN`]: 'example.invalid',
       [`${prefix}VITALITY_PRODUCT_KEY`]: productKey,
@@ -23,6 +23,7 @@ for (const [profile, productKey] of [['mdev', '7'], ['uat', '3']]) {
       });
     }
     const requests = t.mock.method(globalThis, 'fetch', async (_url: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      assert.match(String(_url), new RegExp(`/svc/${tenant}/`));
       const payload = JSON.parse(String(init?.body));
       assert.equal(payload.activateVitalityMembership.product.identifierTypeKey, productKey);
       return Response.json({

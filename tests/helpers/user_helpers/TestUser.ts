@@ -11,7 +11,7 @@ import {
   registerUser
 } from '../../../src/config/API-to-Create-New-User.js';
 import { requiredSetting } from '../../../src/config/mobileSessionInit.js';
-import { requiredUserCreationSetting, userCreationSetting } from '../../../src/config/userCreation.js';
+import { mobileEnvironments, requiredUserCreationSetting, userCreationProfilePrefix, userCreationSetting } from '../../../src/config/userCreation.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { scenarios } from '../../../src/config/runner.js';
@@ -38,7 +38,7 @@ async function provisioningStep<T>(
   action: () => Promise<T>,
   baseUrlKey: 'ZUUL_URL' | 'INTEGRATION_PLATFORM_BASE_URL' = 'INTEGRATION_PLATFORM_BASE_URL'
 ): Promise<T> {
-  const prefix = `VG_${environment.toUpperCase().replace('-', '_')}_`;
+  const prefix = userCreationProfilePrefix(environment);
   const tenant = requiredUserCreationSetting(`${prefix}TENANT_NUMBER`);
   const baseUrl = requiredUserCreationSetting(`${prefix}${baseUrlKey}`).replace(/\/+$/, '');
   const target = new URL(`${baseUrl}${endpoint.replace('{tenant}', tenant)}`);
@@ -84,10 +84,10 @@ export async function initializeTestAccountsForSpecs(specs: string[]): Promise<v
 export async function initializeTestAccounts(): Promise<void> {
   member = undefined;
   const environment = (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toLowerCase();
-  if (!['mdev', 'ca-test', 'ca-dev', 'uat'].includes(environment)) {
-    throw new Error('VG_ENVIRONMENT must be one of: mdev, ca-test, ca-dev, uat.');
+  if (!mobileEnvironments.some(profile => profile === environment)) {
+    throw new Error(`VG_ENVIRONMENT must be one of: ${mobileEnvironments.join(', ')}.`);
   }
-  const prefix = `VG_${environment.toUpperCase().replace('-', '_')}_`;
+  const prefix = userCreationProfilePrefix(environment);
   const loginPrefix = requiredUserCreationSetting(`${prefix}LOGIN_PREFIX`);
   requiredSetting('APP_PASSWORD');
   for (const key of ['ZUUL_URL', 'TENANT_NUMBER', 'INTEGRATION_PLATFORM_BASE_URL', 'EMAIL_DOMAIN', 'VITALITY_PRODUCT_KEY']) {

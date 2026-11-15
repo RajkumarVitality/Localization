@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { requiredSetting } from './mobileSessionInit.js';
-import { requiredUserCreationSetting, userCreationSetting } from './userCreation.js';
+import { mobileEnvironments, requiredUserCreationSetting, userCreationProfilePrefix, userCreationSetting } from './userCreation.js';
 import { provisioningFailure } from './provisioningFailure.js';
 
 const firstNames = ['James', 'Daniel', 'Oliver', 'Ethan', 'Noah', 'Lucas', 'Adam', 'Thomas'];
@@ -251,10 +251,10 @@ function requiredPositiveId(value: unknown, field: string): number {
 
 function getProfilePrefix(): string {
   const environment = (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toLowerCase();
-  if (!['mdev', 'ca-test', 'ca-dev', 'uat'].includes(environment)) {
-    throw new Error('VG_ENVIRONMENT must be one of: mdev, ca-test, ca-dev, uat.');
+  if (!mobileEnvironments.some(profile => profile === environment)) {
+    throw new Error(`VG_ENVIRONMENT must be one of: ${mobileEnvironments.join(', ')}.`);
   }
-  return `VG_${environment.toUpperCase().replace('-', '_')}_`;
+  return userCreationProfilePrefix(environment);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

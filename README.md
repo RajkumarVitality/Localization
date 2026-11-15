@@ -198,7 +198,9 @@ Tenant input is required and matched against each profile's `TENANT_NUMBER`
 in `user-creation.properties` (environment-variable overrides still apply).
 Only matching profiles are offered; a single match is selected automatically.
 For example, if MDEV and UAT both configure tenant `34`, entering `34` offers
-`1. MDEV  2. UAT`. Unknown tenants prompt again instead of overriding a profile.
+`1. MDEV  2. UAT`. Configure `VG_T9998_MDEV_TENANT_NUMBER=9998` and the
+other `VG_T9998_MDEV_` settings to offer a separate MDEV profile for tenant
+`9998`. Unknown tenants prompt again instead of overriding a profile.
 Press Enter at the platform or environment prompt to use the shown default.
 The selection applies to all provisioning workers without modifying the properties file.
 Mobile element locators and expected text are loaded from `elements/T<TENANT_NUMBER>.yml`
@@ -244,10 +246,11 @@ Android selectors and visibility waits remain unchanged. Device/cloud command
 latency still affects execution time; this does not disable animation or readiness checks.
 After the final assessment answer, the flow clicks Submit once without first
 waiting for a question Next button. Intermediate question and section navigation
-is preserved. Assessment inputs are loaded from
-[`mha-low-risk-assessment.json`](./tests/fixtures/mha-low-risk-assessment.json)
-and [`mha-high-risk-assessment.json`](./tests/fixtures/mha-high-risk-assessment.json)
-for the respective journeys.
+is preserved. Assessment inputs are loaded from `tests/fixtures/T<TENANT_NUMBER>/`:
+tenant `34` uses `T34`, while tenant `9998` uses `T9998`. The high- and low-risk
+journeys use `mha-high-risk-assessment.json` and `mha-low-risk-assessment.json`
+respectively; the negative tests also use the selected tenant's low-risk fixture.
+Missing tenant fixtures fail rather than falling back to another tenant.
 
 ### MHA negative tests
 
@@ -284,8 +287,10 @@ from the mobile/cloud settings in `lambdatest.properties`. Copy
 `user-creation.properties` and fill in the selected profile. The local file is
 ignored by Git; never commit API credentials.
 
-Set `VG_ENVIRONMENT` to `mdev`, `ca-test`, `ca-dev`, or `uat` (default: `mdev`).
-The corresponding prefixes are `VG_MDEV_`, `VG_CA_TEST_`, and `VG_CA_DEV_`.
+Set `VG_ENVIRONMENT` to `mdev`, `mdev-9998`, `ca-test`, `ca-dev`, or `uat`
+(default: `mdev`). The corresponding prefixes are `VG_MDEV_`, `VG_T9998_MDEV_`,
+`VG_CA_TEST_`, `VG_CA_DEV_`, and `VG_UAT_`. The `mdev-9998` profile has its own
+settings and does not fall back to `VG_MDEV_` provisioning values.
 Each profile requires `TENANT_NUMBER`, `ZUUL_URL`,
 `INTEGRATION_PLATFORM_BASE_URL`, `VITALITY_PRODUCT_KEY`,
 `MEMBERSHIP_REFERENCE_KEYS` (comma-separated), `EMAIL_DOMAIN`, and

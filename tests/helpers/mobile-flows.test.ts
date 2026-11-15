@@ -9,6 +9,7 @@ import { HomeScreen } from '../../src/pages/HomeScreen.js';
 import { LoginScreen } from '../../src/pages/LoginScreen.js';
 import { MHAQuestionsScreen } from '../../src/pages/MHAQuestionsScreen.js';
 import { WelcomeScreen } from '../../src/pages/WelcomeScreen.js';
+import { assessmentResourceUrl, loadAssessmentResource } from '../../src/config/assessmentResource.js';
 import { loginToHome } from '../helpers/genericFlow.js';
 
 for (const platform of ['Android', 'iOS'] as const) {
@@ -83,14 +84,65 @@ for (const platform of ['Android', 'iOS'] as const) {
   });
 }
 
-for (const risk of ['low', 'high']) {
-  test(`assessment resource loader reads the ${risk}-risk fixture unchanged`, async t => {
-    const resourceName = `mha-${risk}-risk-assessment.json`;
-    const expected = JSON.parse(await readFile(new URL(`../fixtures/${resourceName}`, import.meta.url), 'utf8'));
-    const screen = new MHAQuestionsScreen(new MobileSession('Android'));
-    let loaded: unknown;
-    t.mock.method(screen, 'completeAssessment', async (assessment: unknown) => { loaded = assessment; });
-    await screen.completeAssessmentFromResource(resourceName);
-    assert.deepEqual(loaded, expected);
-  });
+for (const tenant of ['34', '9998']) {
+  for (const risk of ['low', 'high']) {
+    test(`assessment resource loader reads tenant ${tenant} ${risk}-risk fixture`, async t => {
+      const previousEnvironment = process.env.VG_ENVIRONMENT;
+      const previousTenant = process.env.VG_CA_TEST_TENANT_NUMBER;
+      process.env.VG_ENVIRONMENT = 'ca-test';
+      process.env.VG_CA_TEST_TENANT_NUMBER = tenant;
+      t.after(() => {
+        if (previousEnvironment === undefined) delete process.env.VG_ENVIRONMENT;
+        else process.env.VG_ENVIRONMENT = previousEnvironment;
+        if (previousTenant === undefined) delete process.env.VG_CA_TEST_TENANT_NUMBER;
+        else process.env.VG_CA_TEST_TENANT_NUMBER = previousTenant;
+      });
+      const resourceName = `mha-${risk}-risk-assessment.json`;
+      const expectedUrl = new URL(`../fixtures/T${tenant}/${resourceName}`, import.meta.url);
+      assert.equal(assessmentResourceUrl(resourceName).href, expectedUrl.href);
+      const expected = JSON.parse(await readFile(expectedUrl, 'utf8'));
+      const screen = new MHAQuestionsScreen(new MobileSession('Android'));
+      let loaded: unknown;
+      t.mock.method(screen, 'completeAssessment', async (assessment: unknown) => { loaded = assessment; });
+      await screen.completeAssessmentFromResource(resourceName);
+      assert.deepEqual(loaded, expected);
+      assert.deepEqual(await loadAssessmentResource(resourceName), expected);
+    });
+  }
 }
+
+test('MDEV-9998 assessments use the tenant-specific profile settings', t => {
+  const previousEnvironment = process.env.VG_ENVIRONMENT;
+  const previousMdevTenant = process.env.VG_MDEV_TENANT_NUMBER;
+  const previousTenant = process.env.VG_T9998_MDEV_TENANT_NUMBER;
+  t.after(() => {
+    if (previousEnvironment === undefined) delete process.env.VG_ENVIRONMENT;
+    else process.env.VG_ENVIRONMENT = previousEnvironment;
+    if (previousMdevTenant === undefined) delete process.env.VG_MDEV_TENANT_NUMBER;
+    else process.env.VG_MDEV_TENANT_NUMBER = previousMdevTenant;
+    if (previousTenant === undefined) delete process.env.VG_T9998_MDEV_TENANT_NUMBER;
+    else process.env.VG_T9998_MDEV_TENANT_NUMBER = previousTenant;
+  });
+  process.env.VG_ENVIRONMENT = 'mdev-9998';
+  process.env.VG_MDEV_TENANT_NUMBER = '34';
+  process.env.VG_T9998_MDEV_TENANT_NUMBER = '9998';
+  assert.equal(assessmentResourceUrl('mha-low-risk-assessment.json').href,
+    new URL('../fixtures/T9998/mha-low-risk-assessment.json', import.meta.url).href);
+});
+
+test('assessment resource loading rejects invalid tenants and missing tenant fixtures', async t => {
+  const previousEnvironment = process.env.VG_ENVIRONMENT;
+  const previousTenant = process.env.VG_CA_TEST_TENANT_NUMBER;
+  t.after(() => {
+    if (previousEnvironment === undefined) delete process.env.VG_ENVIRONMENT;
+    else process.env.VG_ENVIRONMENT = previousEnvironment;
+    if (previousTenant === undefined) delete process.env.VG_CA_TEST_TENANT_NUMBER;
+    else process.env.VG_CA_TEST_TENANT_NUMBER = previousTenant;
+  });
+  process.env.VG_ENVIRONMENT = 'ca-test';
+  process.env.VG_CA_TEST_TENANT_NUMBER = '../34';
+  assert.throws(() => assessmentResourceUrl('mha-low-risk-assessment.json'), /Invalid assessment tenant number/);
+  assert.throws(() => assessmentResourceUrl(' '), /must not be blank/);
+  process.env.VG_CA_TEST_TENANT_NUMBER = '123456789';
+  await assert.rejects(loadAssessmentResource('mha-low-risk-assessment.json'), { code: 'ENOENT' });
+});

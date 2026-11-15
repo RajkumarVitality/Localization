@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { loadAssessmentResource } from '../../src/config/assessmentResource.js';
 import { executionReporter } from '../../src/utils/ExecutionReporter.js';
 import { MHAQuestionsScreen } from '../../src/pages/MHAQuestionsScreen.js';
 import { MHASectionScreen } from '../../src/pages/MHASectionScreen.js';
@@ -22,9 +22,7 @@ describe('mental health assessment required answer validation', () => {
     await landingScreen.clickIundertandOnDataPrivacyScreen();
     await new MHASectionScreen(session).clickStartButton();
 
-    const fixture = JSON.parse(await readFile(
-      new URL('../fixtures/mha-low-risk-assessment.json', import.meta.url), 'utf8'
-    ));
+    const fixture = await loadAssessmentResource('mha-low-risk-assessment.json');
     const firstQuestion: unknown = fixture['Mental health assessment']?.Sections?.[0]?.Questions?.[0]?.Name;
     if (typeof firstQuestion !== 'string' || !firstQuestion.trim()) {
       throw new Error('The low-risk MHA fixture must contain the first required question.');

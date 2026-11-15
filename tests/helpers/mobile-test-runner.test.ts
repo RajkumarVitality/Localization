@@ -20,7 +20,28 @@ test('maps the requested environments to configured profile names', () => {
   assert.equal(parseEnvironmentSelection('dev'), 'ca-dev');
   assert.equal(parseEnvironmentSelection('3'), 'mdev');
   assert.equal(parseEnvironmentSelection('uat'), 'uat');
+  assert.equal(parseEnvironmentSelection('mdev-9998'), 'mdev-9998');
   assert.equal(parseEnvironmentSelection('production'), undefined);
+});
+
+test('offers a separate MDEV profile for tenant 9998 while preserving MDEV tenant 34', async () => {
+  const environment: NodeJS.ProcessEnv = {};
+  const settings: Record<string, string> = {
+    VG_MDEV_TENANT_NUMBER: '34',
+    VG_T9998_MDEV_TENANT_NUMBER: '9998',
+    VG_CA_TEST_TENANT_NUMBER: '9998'
+  };
+  const answers = ['9998', '2', '1', 'lt://COMMAND_APP'];
+  await promptForRunConfiguration(async prompt => {
+    if (prompt.startsWith('Select environment')) {
+      assert.match(prompt, /1\. CA-TEST  2\. MDEV-9998/);
+    }
+    assert.ok(answers.length);
+    return answers.shift()!;
+  }, environment, key => settings[key]);
+  assert.equal(environment.VG_ENVIRONMENT, 'mdev-9998');
+  assert.equal(environment.VG_T9998_MDEV_TENANT_NUMBER, '9998');
+  assert.equal(environment.VG_MDEV_TENANT_NUMBER, undefined);
 });
 
 test('asks for tenant, environment, platform and AppId in order, applying the selected profile', async () => {

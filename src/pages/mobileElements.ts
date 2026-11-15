@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { load } from 'js-yaml';
-import { userCreationSetting } from '../config/userCreation.js';
+import { configuredTenantNumber } from '../config/userCreation.js';
 
 export interface MobileLocator {
   android: string;
@@ -32,11 +32,6 @@ function isMobileElementCatalog(value: unknown): value is MobileElementCatalog {
           && Object.values(locator.expected).every(text => typeof text === 'string')))
     )
   );
-}
-
-function configuredTenantNumber(): string {
-  const profile = (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toUpperCase().replace('-', '_');
-  return userCreationSetting(`VG_${profile}_TENANT_NUMBER`) ?? '9998';
 }
 
 export function loadMobileElementCatalog(tenantNumber: string): MobileElementCatalog {

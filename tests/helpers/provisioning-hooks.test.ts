@@ -17,9 +17,11 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
     ? ['success', 'api-error', 'same-password']
     : file === 'screening-vaccination'
       ? ['success', 'success-ios', 'api-error']
-      : ['success', 'api-error'];
+      : file === 'mha-high-risk'
+        ? ['success', 'success-mdev-9998', 'api-error']
+        : ['success', 'api-error'];
   for (const outcome of outcomes) {
-    const succeeds = outcome === 'success' || outcome === 'success-ios';
+    const succeeds = outcome === 'success' || outcome === 'success-ios' || outcome === 'success-mdev-9998';
     test(`${file} pre-session provisioning: ${outcome}`, async t => {
       const settings = {
         VG_ENVIRONMENT: 'mdev',
@@ -36,6 +38,15 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
         PLATFORM: outcome === 'success-ios' ? 'iOS' : 'Android',
         configUserAgent: 'test-agent'
       };
+      if (outcome === 'success-mdev-9998') {
+        settings.VG_ENVIRONMENT = 'mdev-9998';
+        for (const [key, value] of Object.entries(settings)) {
+          if (key.startsWith('VG_MDEV_')) {
+            Object.assign(settings, { [key.replace('VG_MDEV_', 'VG_T9998_MDEV_')]: value });
+          }
+        }
+        settings.VG_MDEV_TENANT_NUMBER = '34';
+      }
       for (const [key, value] of Object.entries(settings)) {
         const previous = process.env[key];
         process.env[key] = value;
@@ -48,6 +59,9 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
       const fetchMock = t.mock.method(globalThis, 'fetch', async (url: string, init: RequestInit) => {
         if (!succeeds) return new Response(null, { status: 500 });
         const route = new URL(url).pathname;
+        if (outcome === 'success-mdev-9998' && route.includes('/svc/')) {
+          assert.match(route, /\/svc\/9998\//);
+        }
         if (route.endsWith('/createPartyCore/1')) {
           return Response.json({ createPartyCoreResponse: { party: { partyId: 111 } } }, { status: 201 });
         }
