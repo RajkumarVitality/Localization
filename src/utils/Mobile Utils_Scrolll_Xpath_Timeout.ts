@@ -2,6 +2,7 @@ import { browser, $, $$ } from '@wdio/globals';
 import type { ChainablePromiseElement } from 'webdriverio';
 import { settingOr, type MobilePlatform } from '../config/mobileSessionInit.js';
 import { executionTimeouts } from '../config/timeoutsHandling.js';
+import { executionReporter } from './ExecutionReporter.js';
 
 export class MobileSession {
   readonly isIOS: boolean;
@@ -16,33 +17,52 @@ export class MobileSession {
     return this.isIOS ? iosXpath : androidXpath;
   }
 
+  async retryOnce<T>(description: string, operation: (retry: boolean) => Promise<T>): Promise<T> {
+    try {
+      return await operation(false);
+    } catch (error) {
+      executionReporter.log(`${description} failed; retrying once: ${error instanceof Error ? error.message : String(error)}`);
+      return await operation(true);
+    }
+  }
+
   async waitForElement(selector: string, timeout = this.waitTimeout): Promise<ChainablePromiseElement> {
+    return this.retryOnce(`Element lookup ${selector}`, retry => this.waitForElementAttempt(selector, retry ? 0 : timeout));
+  }
+
+  private async waitForElementAttempt(selector: string, timeout: number): Promise<ChainablePromiseElement> {
     const element = await $(selector);
     const deadline = Date.now() + timeout;
-    while (Date.now() <= deadline) {
+    do {
       if (await element.isExisting()) {
         return element;
       }
+      if (Date.now() >= deadline) break;
       await browser.pause(250);
-    }
+    } while (Date.now() <= deadline);
     throw new Error(`Element was not found within ${timeout} ms: ${selector}`);
   }
 
   async waitForVisibleElement(selector: string, timeout = this.waitTimeout): Promise<ChainablePromiseElement> {
+    return this.retryOnce(`Element visibility ${selector}`, retry => this.waitForVisibleElementAttempt(selector, retry ? 0 : timeout));
+  }
+
+  private async waitForVisibleElementAttempt(selector: string, timeout: number): Promise<ChainablePromiseElement> {
     const element = await $(selector);
     const deadline = Date.now() + timeout;
-    while (Date.now() <= deadline) {
+    do {
       if (await element.isDisplayed()) {
         return element;
       }
+      if (Date.now() >= deadline) break;
       await browser.pause(250);
-    }
+    } while (Date.now() <= deadline);
     throw new Error(`Element was not visible within ${timeout} ms: ${selector}`);
   }
 
   async isElementVisible(selector: string, timeout = 5_000): Promise<boolean> {
     try {
-      await this.waitForVisibleElement(selector, timeout);
+      await this.waitForVisibleElementAttempt(selector, timeout);
       return true;
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Element was not visible within ')) {
@@ -53,33 +73,17 @@ export class MobileSession {
   }
 
   async clickElement(selector: string): Promise<void> {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        await (await this.waitForVisibleElement(selector)).click();
-        return;
-      } catch (error) {
-        if (!isStaleElementError(error) || attempt === 2) {
-          throw error;
-        }
-        await browser.pause(300);
-      }
-    }
+    await this.retryOnce(`Click ${selector}`, async retry => {
+      await (await this.waitForVisibleElementAttempt(selector, retry ? 0 : this.waitTimeout)).click();
+    });
   }
 
   async typeIntoElement(selector: string, value: string): Promise<void> {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const element = await this.waitForVisibleElement(selector);
-        await element.click();
-        await element.setValue(value);
-        return;
-      } catch (error) {
-        if (!isStaleElementError(error) || attempt === 2) {
-          throw error;
-        }
-        await browser.pause(300);
-      }
-    }
+    await this.clickElement(selector);
+    await this.retryOnce(`Text entry ${selector}`, async retry => {
+      const element = await this.waitForVisibleElementAttempt(selector, retry ? 0 : this.waitTimeout);
+      await element.setValue(value);
+    });
   }
 
   async enterText(
@@ -142,8 +146,4 @@ export class MobileSession {
     }
     return undefined;
   }
-}
-
-function isStaleElementError(error: unknown): boolean {
-  return error instanceof Error && /stale element reference/i.test(error.message);
 }

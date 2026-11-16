@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { browser } from '@wdio/globals';
 import { deflateSync } from 'node:zlib';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
@@ -66,9 +65,9 @@ export class ScreeningVaccinationScreen extends BaseScreen {
   }
 
   async assertFormLoaded(): Promise<void> {
-    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.formType.android, mobileElements.ScreeningVaccinationScreen.formType.ios), 'Screening vaccination form type field was not displayed');
-    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.formDate.android, mobileElements.ScreeningVaccinationScreen.formDate.ios), 'Screening vaccination form date field was not displayed');
-    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.uploadControl.android, mobileElements.ScreeningVaccinationScreen.uploadControl.ios), 'Screening vaccination form upload control was not displayed');
+    await this.assertCondition(() => this.isVisible(mobileElements.ScreeningVaccinationScreen.formType.android, mobileElements.ScreeningVaccinationScreen.formType.ios), 'Screening vaccination form type field was not displayed');
+    await this.assertCondition(() => this.isVisible(mobileElements.ScreeningVaccinationScreen.formDate.android, mobileElements.ScreeningVaccinationScreen.formDate.ios), 'Screening vaccination form date field was not displayed');
+    await this.assertCondition(() => this.isVisible(mobileElements.ScreeningVaccinationScreen.uploadControl.android, mobileElements.ScreeningVaccinationScreen.uploadControl.ios), 'Screening vaccination form upload control was not displayed');
   }
 
   openSubmissionForm(): Promise<void> {
@@ -82,8 +81,8 @@ export class ScreeningVaccinationScreen extends BaseScreen {
   }
 
   async assertProofUploadControlVisible(): Promise<void> {
-    assert.ok(
-      await this.isVisible(mobileElements.ScreeningVaccinationScreen.proofUploadControl.android, mobileElements.ScreeningVaccinationScreen.proofUploadControl.ios),
+    await this.assertCondition(
+      () => this.isVisible(mobileElements.ScreeningVaccinationScreen.proofUploadControl.android, mobileElements.ScreeningVaccinationScreen.proofUploadControl.ios),
       'Proof upload control was not visible on the screening vaccination form'
     );
   }
@@ -98,7 +97,7 @@ export class ScreeningVaccinationScreen extends BaseScreen {
 
     const today = String(new Date().getDate());
     const dayLocator = formatMobileLocator(mobileElements.ScreeningVaccinationScreen.currentDay, { day: today });
-    assert.ok(await this.isVisible(dayLocator.android, dayLocator.ios), 'Current day was not available in the date picker');
+    await this.assertCondition(() => this.isVisible(dayLocator.android, dayLocator.ios), 'Current day was not available in the date picker');
     await this.click(dayLocator.android, dayLocator.ios);
 
     if (await this.isVisible(mobileElements.ScreeningVaccinationScreen.dateConfirm.android, mobileElements.ScreeningVaccinationScreen.dateConfirm.ios)) {
@@ -111,14 +110,14 @@ export class ScreeningVaccinationScreen extends BaseScreen {
   async uploadPdfFromDevice(): Promise<void> {
     await this.scrollAndClick(mobileElements.ScreeningVaccinationScreen.uploadButton.android, mobileElements.ScreeningVaccinationScreen.uploadButton.ios, 5);
     await this.click(mobileElements.ScreeningVaccinationScreen.selectPdf.android, mobileElements.ScreeningVaccinationScreen.selectPdf.ios);
-    await (await this.element(mobileElements.ScreeningVaccinationScreen.pdfFile.android, mobileElements.ScreeningVaccinationScreen.pdfFile.ios)).click();
+    await this.click(mobileElements.ScreeningVaccinationScreen.pdfFile.android, mobileElements.ScreeningVaccinationScreen.pdfFile.ios);
   }
 
   private async uploadImageFromGallery(): Promise<void> {
     await this.scrollAndClick(mobileElements.ScreeningVaccinationScreen.uploadButton.android, mobileElements.ScreeningVaccinationScreen.uploadButton.ios, 5);
-    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.galleryOption.android, mobileElements.ScreeningVaccinationScreen.galleryOption.ios), 'The iOS upload options did not expose a gallery choice');
+    await this.assertCondition(() => this.isVisible(mobileElements.ScreeningVaccinationScreen.galleryOption.android, mobileElements.ScreeningVaccinationScreen.galleryOption.ios), 'The iOS upload options did not expose a gallery choice');
     await this.click(mobileElements.ScreeningVaccinationScreen.galleryOption.android, mobileElements.ScreeningVaccinationScreen.galleryOption.ios);
-    assert.ok(await this.isVisible(mobileElements.ScreeningVaccinationScreen.firstGalleryImage.android, mobileElements.ScreeningVaccinationScreen.firstGalleryImage.ios), 'No selectable photos were visible in the iOS gallery');
+    await this.assertCondition(() => this.isVisible(mobileElements.ScreeningVaccinationScreen.firstGalleryImage.android, mobileElements.ScreeningVaccinationScreen.firstGalleryImage.ios), 'No selectable photos were visible in the iOS gallery');
     await this.click(mobileElements.ScreeningVaccinationScreen.firstGalleryImage.android, mobileElements.ScreeningVaccinationScreen.firstGalleryImage.ios);
   }
 
@@ -141,16 +140,15 @@ export class ScreeningVaccinationScreen extends BaseScreen {
   }
 
   async assertSubmissionSuccessful(): Promise<void> {
-    assert.ok(
-      await this.isVisible(mobileElements.ScreeningVaccinationScreen.submissionSuccess.android, mobileElements.ScreeningVaccinationScreen.submissionSuccess.ios),
+    await this.assertCondition(
+      () => this.isVisible(mobileElements.ScreeningVaccinationScreen.submissionSuccess.android, mobileElements.ScreeningVaccinationScreen.submissionSuccess.ios),
       'Proof submission success message was not displayed'
     );
   }
 
   async assertSubmissionBlockedWithoutProof(): Promise<void> {
-    assert.equal(
-      await this.isVisible(mobileElements.ScreeningVaccinationScreen.submissionSuccess.android, mobileElements.ScreeningVaccinationScreen.submissionSuccess.ios),
-      false,
+    await this.assertCondition(
+      async () => !await this.isVisible(mobileElements.ScreeningVaccinationScreen.submissionSuccess.android, mobileElements.ScreeningVaccinationScreen.submissionSuccess.ios),
       'Proof submission must not succeed without an uploaded proof'
     );
     await this.assertFormLoaded();

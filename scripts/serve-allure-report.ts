@@ -5,6 +5,8 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { openInDefaultBrowser } from '../src/utils/browserLauncher.js';
+import { allureFilterOptions } from '../src/config/allureFilterOptions.js';
+import { mobileEnvironments } from '../src/config/userCreation.js';
 import { validateAllureDate, type AllureResultFilter } from '../src/utils/allureResultFilter.js';
 import { generateFilteredReport } from './generate-allure-report.js';
 
@@ -40,19 +42,19 @@ const page = `<!doctype html>
     <form id="filters">
       <label>Start date (inclusive)<input name="fromDate" type="date"></label>
       <label>End date (inclusive)<input name="toDate" type="date"></label>
-      <label>Environment
-        <select name="environment">
-          <option value="">All environments</option>
-          <option value="ca-test">ca-test</option>
-          <option value="ca-dev">dev (ca-dev)</option>
-          <option value="mdev">mdev</option>
-          <option value="mdev-9998">mdev-9998</option>
-          <option value="uat">uat</option>
+      <label>Tenant number
+        <select name="tenant" id="tenant">
+          <option value="">All tenants</option>
         </select>
       </label>
-      <button id="generate" type="submit">Generate report</button>
+      <label>Environment
+        <select name="environment" id="environment">
+          <option value="">All environments</option>
+        </select>
+      </label>
+      <button id="generate" type="submit" disabled>Generate report</button>
     </form>
-    <p id="status" role="status">Choose a date range and environment, then generate the report.</p>
+    <p id="status" role="status">Choose filters, then generate the report.</p>
   </header>
   <iframe id="report" title="Filtered Allure report"></iframe>
   <script>
@@ -60,6 +62,41 @@ const page = `<!doctype html>
     const button = document.querySelector('#generate');
     const status = document.querySelector('#status');
     const report = document.querySelector('#report');
+    const tenant = document.querySelector('#tenant');
+    const environment = document.querySelector('#environment');
+    let profiles = [];
+
+    function updateEnvironments() {
+      const selectedEnvironment = environment.value;
+      environment.replaceChildren(new Option('All environments', ''));
+      for (const profile of profiles) {
+        if (!tenant.value || profile.tenant === tenant.value) {
+          environment.add(new Option(profile.environment.toUpperCase(), profile.environment));
+        }
+      }
+      if (Array.from(environment.options).some(option => option.value === selectedEnvironment)) {
+        environment.value = selectedEnvironment;
+      }
+    }
+
+    tenant.addEventListener('change', updateEnvironments);
+    fetch('/api/filter-options')
+      .then(async response => {
+        const options = await response.json();
+        if (!response.ok) throw new Error(options.error || 'Unable to load tenant and environment options.');
+        return options;
+      })
+      .then(options => {
+        profiles = options.profiles;
+        const tenants = [...new Set(profiles.map(profile => profile.tenant).filter(Boolean))].sort();
+        for (const number of tenants) tenant.add(new Option(number, number));
+        updateEnvironments();
+        button.disabled = false;
+      })
+      .catch(error => {
+        status.textContent = error instanceof Error ? error.message : String(error);
+      });
+
     form.addEventListener('submit', async event => {
       event.preventDefault();
       button.disabled = true;
@@ -73,7 +110,8 @@ const page = `<!doctype html>
           body: JSON.stringify({
             fromDate: values.get('fromDate') || undefined,
             toDate: values.get('toDate') || undefined,
-            environment: values.get('environment') || undefined
+            environment: values.get('environment') || undefined,
+            tenant: values.get('tenant') || undefined
           })
         });
         const result = await response.json();
@@ -81,7 +119,8 @@ const page = `<!doctype html>
         status.textContent = 'Showing ' + result.matched + ' of ' + result.total +
           ' results · ' + (values.get('fromDate') || 'any date') + ' to ' +
           (values.get('toDate') || 'any date') + ' · ' +
-          (values.get('environment') || 'all environments');
+          (values.get('environment') || 'all environments') + ' · ' +
+          (values.get('tenant') ? 'tenant ' + values.get('tenant') : 'all tenants');
         report.src = result.reportUrl;
         report.style.display = 'block';
       } catch (error) {
@@ -128,10 +167,16 @@ function parseFilter(input: unknown): AllureResultFilter {
     throw new Error('End date must be on or after the start date.');
   }
   if (values.environment !== undefined) {
-    if (typeof values.environment !== 'string' || !['ca-test', 'ca-dev', 'mdev', 'mdev-9998', 'uat'].includes(values.environment)) {
+    if (typeof values.environment !== 'string' || !mobileEnvironments.some(environment => environment === values.environment)) {
       throw new Error('Select a valid environment.');
     }
     filter.environment = values.environment;
+  }
+  if (values.tenant !== undefined) {
+    if (typeof values.tenant !== 'string' || !/^\d+$/.test(values.tenant)) {
+      throw new Error('Tenant number must contain only digits.');
+    }
+    filter.tenant = values.tenant;
   }
   return filter;
 }
@@ -173,11 +218,22 @@ function serveReportFile(requestPath: string, response: ServerResponse): void {
   }).catch(() => response.writeHead(404).end('Report file not found.'));
 }
 
-const server = createServer(async (request, response) => {
+export const server = createServer(async (request, response) => {
   const requestPath = new URL(request.url ?? '/', `http://127.0.0.1:${port}`).pathname;
   if (request.method === 'GET' && requestPath === '/') {
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     response.end(page);
+    return;
+  }
+
+  if (request.method === 'GET' && requestPath === '/api/filter-options') {
+    try {
+      sendJson(response, 200, { profiles: allureFilterOptions() });
+    } catch (error) {
+      sendJson(response, 500, {
+        error: error instanceof Error ? error.message : 'Unable to load filter options.'
+      });
+    }
     return;
   }
 
@@ -213,15 +269,17 @@ const server = createServer(async (request, response) => {
   response.writeHead(404).end('Not found.');
 });
 
-server.listen(port, '127.0.0.1', () => {
-  const url = `http://127.0.0.1:${port}/`;
-  console.log(`[AllureReport] Filter UI ready at ${url}. Press Ctrl+C to stop the server.`);
-  if (process.env.ALLURE_REPORT_NO_OPEN !== 'true') {
-    openInDefaultBrowser(url, message => console.warn(`[AllureReport] ${message}`));
-  }
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  server.listen(port, '127.0.0.1', () => {
+    const url = `http://127.0.0.1:${port}/`;
+    console.log(`[AllureReport] Filter UI ready at ${url}. Press Ctrl+C to stop the server.`);
+    if (process.env.ALLURE_REPORT_NO_OPEN !== 'true') {
+      openInDefaultBrowser(url, message => console.warn(`[AllureReport] ${message}`));
+    }
+  });
 
-server.on('error', error => {
-  console.error('[AllureReport] Unable to start report filter UI.', error);
-  process.exitCode = 1;
-});
+  server.on('error', error => {
+    console.error('[AllureReport] Unable to start report filter UI.', error);
+    process.exitCode = 1;
+  });
+}

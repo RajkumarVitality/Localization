@@ -1,7 +1,7 @@
 import type { MobilePlatform } from './mobileSessionInit.js';
 
 export const scenarios = {
-  'loginAndLogout': { file: 'smoke/login-logout.spec.ts', name: 'Login and Logout Functionality Test', provisionMember: true },
+  loginAndLogout: { file: 'smoke/login-logout.spec.ts', name: 'Login and Logout Functionality Test', provisionMember: true },
   'lockout': { file: 'regression/incorrect-password-lockout.spec.ts', name: '5 Times Incorrect Password Test', provisionMember: true },
   'mha-low-risk': { file: 'regression/mha-low-risk.spec.ts', name: 'MHA Low Risk Assessment', provisionMember: true },
   'mha-high-risk': { file: 'smoke/mha-high-risk.spec.ts', name: 'MHA High Risk Assessment', provisionMember: true },

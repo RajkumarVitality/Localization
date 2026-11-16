@@ -29,6 +29,11 @@ export abstract class BaseScreen {
     }
 
     const targetSelector = this.selector(androidXpath, iosXpath);
+    await this.session.retryOnce(`Scroll and click ${targetSelector}`,
+      () => this.scrollAndClickAttempt(targetSelector, maxSwipes));
+  }
+
+  private async scrollAndClickAttempt(targetSelector: string, maxSwipes: number): Promise<void> {
     for (let swipe = 0; swipe <= maxSwipes; swipe++) {
       const candidate = await this.session.findVisibleScrollTarget(targetSelector);
       if (candidate) {
@@ -91,10 +96,12 @@ export abstract class BaseScreen {
   }
 
   protected async assertTextEquals(element: ChainablePromiseElement, expected: string): Promise<string> {
-    const attribute = this.session.isIOS ? 'label' : 'content-desc';
-    const actual = (await element.getAttribute(attribute) ?? '').trim();
-    assert.equal(actual, expected, 'Mobile element text did not match');
-    return actual;
+    return this.session.retryOnce('Text equality assertion', async () => {
+      const attribute = this.session.isIOS ? 'label' : 'content-desc';
+      const actual = (await element.getAttribute(attribute) ?? '').trim();
+      assert.equal(actual, expected, 'Mobile element text did not match');
+      return actual;
+    });
   }
 
   protected async assertTextContains(element: ChainablePromiseElement, expected: string): Promise<string>;
@@ -103,24 +110,32 @@ export abstract class BaseScreen {
     element: ChainablePromiseElement,
     ...fragments: string[]
   ): Promise<string | void> {
-    const attribute = this.session.isIOS ? 'label' : 'content-desc';
-    const rawAttribute = await element.getAttribute(attribute);
-    const actual = fragments.length === 1
-      ? rawAttribute?.trim() ?? ''
-      : await this.visibleText(element);
+    return this.session.retryOnce('Text contains assertion', async () => {
+      const attribute = this.session.isIOS ? 'label' : 'content-desc';
+      const rawAttribute = await element.getAttribute(attribute);
+      const actual = fragments.length === 1
+        ? rawAttribute?.trim() ?? ''
+        : await this.visibleText(element);
 
-    if (fragments.length === 1) {
+      if (fragments.length === 1) {
+        assert.ok(
+          actual.includes(fragments[0]),
+          `Expected mobile element text to contain "${fragments[0]}" but was: ${actual}`
+        );
+        return actual;
+      }
+
       assert.ok(
-        actual.includes(fragments[0]),
-        `Expected mobile element text to contain "${fragments[0]}" but was: ${actual}`
+        fragments.some(fragment => actual.includes(fragment)),
+        `Expected text to contain one of [${fragments.join(', ')}] but was: ${actual}`
       );
-      return actual;
-    }
+    });
+  }
 
-    assert.ok(
-      fragments.some(fragment => actual.includes(fragment)),
-      `Expected text to contain one of [${fragments.join(', ')}] but was: ${actual}`
-    );
+  protected async assertCondition(check: () => Promise<boolean>, message: string): Promise<void> {
+    await this.session.retryOnce(message, async () => {
+      assert.ok(await check(), message);
+    });
   }
 
   protected recordStep(message: string): void {

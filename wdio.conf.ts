@@ -15,11 +15,14 @@ import { executionReporter } from './src/utils/ExecutionReporter.js';
 import { closeLiveSessionTab, openInDefaultBrowser } from './src/utils/browserLauncher.js';
 import type { MobilePlatform } from './src/config/mobileSessionInit.js';
 import { browser } from '@wdio/globals';
-import { addAttachment, addLabel, addStep } from '@wdio/allure-reporter';
+import { addAttachment, addLabel, addLink, addStep } from '@wdio/allure-reporter';
 import { executionTimeouts } from './src/config/timeoutsHandling.js';
 import { resolveScenario, scenarios, suites } from './src/config/runner.js';
 import { initializeTestAccountsForSpecs } from './tests/helpers/user_helpers/TestUser.js';
-import { userCreationSetting } from './src/config/userCreation.js';
+import { configuredTenantNumber, userCreationSetting } from './src/config/userCreation.js';
+import { reportDynatraceSessions } from './src/utils/dynatraceSessions.js';
+import { captureSessionDeviceDetails, sessionTimeLogLine, sessionDeviceDetails, sessionDeviceLogLines } from './src/utils/sessionDeviceDetails.js';
+import { readSessionAppVersion } from './src/utils/sessionAppVersion.js';
 
 const platform: MobilePlatform = selectedPlatform();
 const scenario = resolveScenario(settingOr('LT_SCENARIO', 'loginAndLogout'), platform);
@@ -27,6 +30,9 @@ const endpoint = cloudEndpoint();
 const testScenario = scenarios[scenario];
 const timeouts = executionTimeouts();
 let liveSessionUrl: string | undefined;
+let sessionStartTime: Date;
+let sessionCreatedAt: Date;
+let appVersionError: string | undefined;
 
 export const config: WebdriverIO.Config = {
   runner: 'local',
@@ -60,16 +66,48 @@ export const config: WebdriverIO.Config = {
     try {
       setSessionNameFromSpecs(capabilities, specs);
       await initializeTestAccountsForSpecs(specs);
+      sessionStartTime = new Date();
     } catch (error) {
       console.error('[UserProvisioning] Pre-session setup failed; stopping worker without opening a mobile session.', error);
       // WebdriverIO logs and swallows hook errors; terminate only this worker.
       process.exit(1);
     }
   },
+  async before(capabilities) {
+    sessionCreatedAt = new Date();
+    console.log(`[MobileSession] ${sessionTimeLogLine(sessionCreatedAt, 'Create')}`);
+    console.log(`[MobileSession] App ID: ${appIdFor(platform, scenario)}`);
+    let appVersion: string | undefined;
+    appVersionError = undefined;
+    try {
+      appVersion = await readSessionAppVersion(
+        browser, platform, browser.capabilities, appToUninstall(platform)
+      );
+    } catch (error) {
+      appVersionError = `App version retrieval failed: ${error instanceof Error ? error.message : String(error)}`;
+      console.warn(`[MobileSession] ${appVersionError}`);
+    }
+    const details = captureSessionDeviceDetails(
+      browser.sessionId, browser.capabilities, deviceDefaults(platform, scenario).device, appVersion,
+      capabilities
+    );
+    for (const line of sessionDeviceLogLines(details)) console.log(`[MobileSession] ${line}`);
+  },
   async beforeTest(test) {
     addLabel('environment', (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toLowerCase());
+    addLabel('tenant', configuredTenantNumber());
     executionReporter.startTest(test.parent, test.title, { addAttachment, addStep });
     executionReporter.log('Starting test execution.');
+    executionReporter.log(sessionTimeLogLine(sessionCreatedAt, 'Create'));
+    executionReporter.log(`App ID: ${appIdFor(platform, scenario)}`);
+    if (!sessionDeviceDetails) throw new Error('Session device details were not captured after session initialization.');
+    for (const line of sessionDeviceLogLines(sessionDeviceDetails)) executionReporter.log(line);
+    if (appVersionError) executionReporter.log(appVersionError);
+    for (const [name, value] of Object.entries(sessionDeviceDetails)) {
+      if (value) await addLabel(name, value);
+    }
+    await executionReporter.captureTextArtifact('session-device-details', JSON.stringify(sessionDeviceDetails, null, 2));
+    executionReporter.log(`Mobile session initiation started: ${sessionStartTime.toISOString()}`);
     executionReporter.log(`Timeouts: element=${timeouts.element} ms, test=${timeouts.test} ms.`);
     const dashboardUrl = sessionDashboardUrl(browser.sessionId);
     executionReporter.log(`LambdaTest session ID: ${browser.sessionId}`);
@@ -89,16 +127,39 @@ export const config: WebdriverIO.Config = {
     await executionReporter.captureScreenshot('app-loaded');
   },
   afterTest: async (_test, _context, result) => {
+    const testEndTime = new Date();
     if (result.error) {
       executionReporter.log(`Test failed: ${result.error.message}`);
       await executionReporter.captureScreenshot('listener-failure');
       await executionReporter.capturePageSource('listener-failure');
-      await executionReporter.finishTest('FAILED');
-      return;
+    } else {
+      await executionReporter.captureScreenshot('test-passed');
+      executionReporter.log('Test passed.');
     }
-    await executionReporter.captureScreenshot('test-passed');
-    executionReporter.log('Test passed.');
-    await executionReporter.finishTest('PASSED');
+    try {
+      if (!sessionDeviceDetails?.osVersion) {
+        executionReporter.log('Dynatrace OS-version filter unavailable: device OS version was not returned by the session.');
+      }
+      if (!sessionDeviceDetails?.deviceName) {
+        executionReporter.log('Dynatrace Device filter unavailable: session device name was not resolved.');
+      }
+      await reportDynatraceSessions(executionReporter, addLink, sessionCreatedAt, testEndTime, platform,
+        process.env.DYNATRACE_ENABLED === 'true' ? process.env.DYNATRACE_ACCESS_TOKEN ?? '' : undefined,
+        sessionDeviceDetails?.osVersion, sessionDeviceDetails?.deviceName);
+    } catch (error) {
+      executionReporter.log(`Dynatrace session reporting failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    executionReporter.log('Execution session summary:');
+    executionReporter.log(sessionTimeLogLine(sessionCreatedAt, 'Create'));
+    executionReporter.log(sessionTimeLogLine(testEndTime, 'End'));
+    executionReporter.log(`App ID: ${appIdFor(platform, scenario)}`);
+    if (sessionDeviceDetails) {
+      executionReporter.log(`LambdaTest session ID: ${sessionDeviceDetails.sessionId}`);
+      for (const line of sessionDeviceLogLines(sessionDeviceDetails)) executionReporter.log(line);
+    } else {
+      executionReporter.log('Session device details unavailable: not captured after session initialization.');
+    }
+    await executionReporter.finishTest(result.error ? 'FAILED' : 'PASSED');
   },
   async after() {
     const appId = appToUninstall(platform);

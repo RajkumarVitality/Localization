@@ -12,7 +12,7 @@ test('tenant 34 adds Dutch locale capabilities and other tenants do not', () => 
   ];
   const previous = new Map(keys.map(key => [key, process.env[key]]));
   try {
-    process.env.VG_ENVIRONMENT = 'mdev';
+    //process.env.VG_ENVIRONMENT = 'mdev';
     process.env.LT_USERNAME = 'test-user';
     process.env.LT_ACCESS_KEY = 'test-key';
     process.env.appId = 'lt://test-app';

@@ -189,6 +189,14 @@ Optional settings:
 
 ## Run the scenarios
 
+Failed mobile element lookups, clicks, text entry, and UI assertions are retried
+once (two attempts total). The second failure aborts the test case. Visibility
+waits remain enabled on the first attempt; an element lookup on retry is a
+single immediate check, without a second visibility wait. Only the failed operation is repeated,
+not the entire test case; retry details appear in the execution log.
+Failure evidence, reporting, and session cleanup still run after the test
+body aborts. Other scenarios in the pack are not cancelled.
+
 Interactive test commands first ask for `TENANT_NUMBER` for user creation, then
 a matching environment, then the platform (`1. Android`, `2. iOS`),
 then the uploaded AppId (`lt://...`)
@@ -403,14 +411,87 @@ PLATFORM=Android npm run test:mha-high-risk
 npm run report:generate
 ```
 
-Each test result is labeled with its user-creation environment (`mdev`,
-`ca-test`, or `ca-dev`). The browser UI lets you select inclusive start/end
-dates and an environment before generating the report. Dates use UTC
+Each new test result is labeled with its user-creation environment and tenant
+number. The browser UI lets you select inclusive start/end dates, a tenant, and
+an environment before generating the report. Tenant choices and their environments
+come from the profile tenant settings in `user-creation.properties` (including
+environment-variable overrides). For example, tenant `34` offers MDEV and UAT
+when both profiles are configured for `34`. Choosing all tenants shows every
+environment. Restart the report UI after changing the properties file. Dates use UTC
 (`YYYY-MM-DD`); leave them blank to include all dates. The selected dates and
-environment are shown above the embedded Allure report. Only the generated
+filters are shown above the embedded Allure report. Only the generated
 report is filtered: the original `target/allure-results/` files are unchanged.
 The `dev` profile appears as `ca-dev`. Older results without environment labels
-can still be filtered by date.
+can still be filtered by date. Older results without tenant labels are included
+when all tenants are selected, but cannot match a tenant filter; rerun those
+tests to generate tenant-labeled results.
+
+### Dynatrace session details
+
+After session creation, returned device capabilities are stored in the exported
+`sessionDeviceDetails` variable in `src/utils/sessionDeviceDetails.ts`:
+`sessionId`, `udid`, `osName`, `osVersion`, and `deviceName`. They appear in the
+console, execution log, Allure labels, and the `session-device-details` attachment.
+The session-ready time is printed in the console and execution log using the
+runner's local timezone: `Session Create Time: 17:27:57 | 16 Nov 2026`.
+The configured App ID is also printed as `App ID: <appId>` in the console,
+execution log, and Allure steps.
+After initialization, `App Version` is read from returned app-version capabilities,
+or from installed app metadata using the returned package/bundle ID (falling back
+to `ANDROID_APP_PACKAGE` / `IOS_BUNDLE_ID`). Android uses `mobile: shell` with
+`dumpsys package` (`versionName`); the cloud provider must allow that command.
+iOS real devices use `mobile: listApps` (`CFBundleShortVersionString`).
+The version is stored as `sessionDeviceDetails.appVersion` and included in logs,
+Allure labels/attachments, and the end summary. Retrieval failures are logged
+explicitly and do not fail the test; no version is fabricated from the App ID.
+When each test finishes (passed or failed), `Session End Time` is recorded in the
+same format in the console, execution log, and Allure. This is the test finish
+time, not the later mobile session teardown time.
+Before finalizing each test's report, an execution session summary repeats the
+creation/end times, App ID, session ID, and stored device details in the console,
+execution log, and Allure steps. It does not query the device again during teardown.
+Device logs include both `device: Galaxy S24` and `Device name: Galaxy S24`
+(using the resolved model name) at the start and in the end summary.
+Returned cloud `device` display names take precedence over Appium hardware model
+codes, keeping execution logs and Allure device details consistent.
+When `browser.capabilities` only supplies a hardware code, the concrete device
+name from the runner capabilities (also used by Allure Parameters) is preferred.
+Regex selection patterns are never printed as resolved device names.
+Values not returned by the provider are explicitly logged as unavailable rather
+than replaced with requested device patterns. Device names equal to the UDID
+are excluded; a concrete configured device name is used if no returned model
+name is available. `osVersion` combines OS name and version (for example,
+`android 14`). UDID is not a Dynatrace RUM session
+identifier; device-specific Dynatrace filters require a verified mapping.
+
+Each test writes an **Open Dynatrace sessions** link to `execution.log` and
+Allure. It opens Classic User Sessions filtered to GTB Central App, mobile app
+type, test platform, and captured Device OS version (for example, `Android 14`).
+The Device filter uses the captured cloud display name (for example,
+`device:Galaxy S25`), matching the device value used in execution logs and Allure.
+If the device name cannot be resolved, the missing filter is explicitly logged.
+The timeframe uses the exact timestamps logged as `Session Create Time` and
+`Session End Time`, encoded in UTC for the same instants. If the device OS
+version is unavailable, the missing filter is explicitly logged.
+The list can contain multiple sessions; it does not identify a
+specific RUM session. Dynatrace login and permission to view sessions are needed.
+
+To additionally include Dynatrace RUM session details for each test, set
+`DYNATRACE_ENABLED=true` and provide `DYNATRACE_ACCESS_TOKEN` as a short-lived
+Dynatrace OAuth access token with permission to query `user.sessions` in Grail.
+Keep the token in a secret environment variable, not a properties file or source
+control. The sessions URL is defined in `src/utils/DynatraceUtil.ts`.
+
+At the end of each test, the runner queries the supplied GTB Central App
+real-user DQL using that session's start time, test end time and platform (iOS or Android).
+The matching session records and query metadata are written to
+`execution.log`; Allure also receives a
+`dynatrace-sessions` attachment. These are RUM session records, not application
+logs, and the query returns at most 1,000 records. Sessions are matched only by
+time, app and platform, so they can include other users' data, and may be absent
+if Dynatrace has not ingested them yet. Protect artifacts and reports accordingly.
+The query can add up to 30 seconds to each test. Query failures are logged in
+the execution report without changing the test outcome.
 
 Run report generation even when the test fails to inspect the failure evidence.
 The Allure command-line tool requires Java on your PATH (`JAVA_HOME` may also

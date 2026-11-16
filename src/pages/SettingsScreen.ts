@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
 import { expectedText, mobileElements } from './mobileElements.js';
@@ -9,7 +8,8 @@ export class SettingsScreen extends BaseScreen {
   }
 
   async assertLoaded(): Promise<void> {
-    assert.ok(await (await this.element(mobileElements.SettingsScreen.heading.android, mobileElements.SettingsScreen.heading.ios)).isDisplayed());
+    const heading = await this.element(mobileElements.SettingsScreen.heading.android, mobileElements.SettingsScreen.heading.ios);
+    await this.assertCondition(() => heading.isDisplayed(), 'Settings heading was not displayed');
   }
 
   scrollToLogoutAndTap(): Promise<void> {

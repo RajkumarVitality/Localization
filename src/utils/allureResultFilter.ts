@@ -5,27 +5,28 @@ export interface AllureResultFilter {
   fromDate?: string;
   toDate?: string;
   environment?: string;
+  tenant?: string;
 }
 
 interface AllureAttachment {
-  name?: string;
+  source?: string;
 }
 
-interface AllureTestResult {
+interface AllureStep {
+  attachments?: AllureAttachment[];
+  steps?: AllureStep[];
+}
+
+interface AllureTestResult extends AllureStep {
   uuid?: string;
   start?: number;
   labels?: Array<{ name?: string; value?: string }>;
-  attachments?: AllureAttachment[];
-}
-
-interface AllureFixture {
-  attachments?: AllureAttachment[];
 }
 
 interface AllureContainer {
   children?: string[];
-  befores?: AllureFixture[];
-  afters?: AllureFixture[];
+  befores?: AllureStep[];
+  afters?: AllureStep[];
 }
 
 export function validateAllureDate(value: string, option: string): string {
@@ -51,6 +52,13 @@ export function matchesAllureResult(
     }
   }
 
+  if (filter.tenant) {
+    const tenant = result.labels?.find(label => label.name === 'tenant')?.value;
+    if (tenant !== filter.tenant) {
+      return false;
+    }
+  }
+
   if (filter.fromDate || filter.toDate) {
     if (typeof result.start !== 'number' || !Number.isFinite(result.start)) {
       return false;
@@ -67,9 +75,11 @@ export function matchesAllureResult(
   return true;
 }
 
-function attachmentNames(fixtures: AllureFixture[] | undefined): string[] {
-  return (fixtures ?? []).flatMap(fixture => fixture.attachments ?? [])
-    .flatMap(attachment => attachment.name ? [attachment.name] : []);
+function attachmentNames(steps: AllureStep[]): string[] {
+  return steps.flatMap(step => [
+    ...(step.attachments ?? []).flatMap(attachment => attachment.source ? [attachment.source] : []),
+    ...attachmentNames(step.steps ?? [])
+  ]);
 }
 
 async function copyAttachments(
@@ -102,14 +112,12 @@ export async function createFilteredAllureResults(
   })));
   const selected = results.filter(({ result }) => matchesAllureResult(result, filter));
   if (selected.length === 0) {
-    throw new Error('No Allure test results match the selected date range and environment.');
+    throw new Error('No Allure test results match the selected filters.');
   }
 
   await mkdir(outputDirectory, { recursive: true });
   const selectedUuids = new Set(selected.flatMap(({ result }) => result.uuid ? [result.uuid] : []));
-  const attachments = selected.flatMap(({ result }) =>
-    (result.attachments ?? []).flatMap(attachment => attachment.name ? [attachment.name] : [])
-  );
+  const attachments = attachmentNames(selected.map(({ result }) => result));
 
   for (const { name, result } of selected) {
     await writeFile(path.join(outputDirectory, name), JSON.stringify(result), 'utf8');
@@ -127,7 +135,7 @@ export async function createFilteredAllureResults(
       JSON.stringify({ ...container, children }),
       'utf8'
     );
-    attachments.push(...attachmentNames(container.befores), ...attachmentNames(container.afters));
+    attachments.push(...attachmentNames(container.befores ?? []), ...attachmentNames(container.afters ?? []));
   }
 
   await copyAttachments(attachments, sourceDirectory, outputDirectory);

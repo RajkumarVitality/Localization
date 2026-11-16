@@ -60,7 +60,7 @@ scripts/serve-allure-report.ts
 | `tests/helpers/` | Shared flows, test hooks, account utilities, and local unit tests. |
 | `src/pages/` | Screen/page objects containing app interactions and selectors. |
 | `src/utils/ExecutionReporter.ts` | Writes execution logs and per-test evidence locally and attaches supported evidence to Allure. |
-| `scripts/serve-allure-report.ts` | Serves a local filter UI for date/environment-filtered Allure report generation. |
+| `scripts/serve-allure-report.ts` | Serves a local filter UI for date, environment, and tenant-filtered Allure report generation. |
 
 ## 4. Test selection and scenario registry
 
@@ -207,7 +207,9 @@ include:
 The WebdriverIO Allure reporter writes source results to
 `target/allure-results/`. The custom reporter attaches execution steps and
 available evidence. The local report UI can generate separate filtered reports
-under `target/allure-filtered-reports/`; it does not modify the source results.
+under `target/allure-filtered-reports/` using date, environment, and tenant
+labels; it does not modify the source results. Older results without tenant
+labels are excluded only when a tenant filter is selected.
 Generated output is ignored by Git. Treat artifacts and reports as potentially
 sensitive because they may contain member or screen data; limit retention and
 access, especially in CI.

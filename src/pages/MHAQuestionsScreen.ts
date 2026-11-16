@@ -34,7 +34,7 @@ export class MHAQuestionsScreen extends BaseScreen {
     const nextButton = await this.element(
       mobileElements.MHAQuestionsScreen.nextButton.android, mobileElements.MHAQuestionsScreen.nextButton.ios
     );
-    assert.equal(await nextButton.isEnabled(), false, 'MHA Next must be disabled before selecting an answer');
+    await this.assertCondition(async () => !await nextButton.isEnabled(), 'MHA Next must be disabled before selecting an answer');
     await this.assertQuestion(0, normalizeConfiguredText(expectedQuestion));
   }
 

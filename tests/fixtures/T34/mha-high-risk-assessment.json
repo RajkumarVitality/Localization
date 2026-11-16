@@ -16,7 +16,7 @@
             "Values": ["Yes"]
           },
           {
-            "Name": "Are you currently consulting with a medical practitioner or taking prescribed medicine from a doctor for your mental health condition?",
+            "Name": "Are you currently consulting with a medical practitioner (e.g. a counsellor, psychologist or psychiatrist) or are you taking prescribed medicine from a doctor for your mental health condition?",
             "Type": "SelectField",
             "Values": ["Yes"]
           }
