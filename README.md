@@ -140,6 +140,8 @@ Mocha suite hooks only verify that the account is ready, without provisioning ag
 The screening scenario also provisions a fresh member before opening a mobile session.
 `testAccounts.member` exposes the selected profile's `LOGIN_PREFIX` plus the generated
 email only after setup succeeds. API requests use the unprefixed email.
+The Allure report includes a `provisioned-test-user` attachment with the generated
+member username, Party ID, insurer code, and date of birth for each test.
 The password is always read from `APP_PASSWORD`, never stored in the fixture.
 Configure the profile's `API_BEARER_TOKEN`, `API_BASIC_AUTH`, `LOGIN_PREFIX`,
 `ZUUL_URL`, `TENANT_NUMBER`, `INTEGRATION_PLATFORM_BASE_URL`, `EMAIL_DOMAIN`
@@ -428,7 +430,11 @@ tests to generate tenant-labeled results.
 
 ### Dynatrace session details
 
-After session creation, returned device capabilities are stored in the exported
+After session creation, the LambdaTest session API is queried using the configured
+`LT_USERNAME` and `LT_ACCESS_KEY`; its device display name takes precedence over
+capability names. If the lookup fails or returns no name, returned device capabilities
+are used as fallback and the lookup failure is logged without failing the test.
+Device details are stored in the exported
 `sessionDeviceDetails` variable in `src/utils/sessionDeviceDetails.ts`:
 `sessionId`, `udid`, `osName`, `osVersion`, and `deviceName`. They appear in the
 console, execution log, Allure labels, and the `session-device-details` attachment.
@@ -457,7 +463,7 @@ codes, keeping execution logs and Allure device details consistent.
 When `browser.capabilities` only supplies a hardware code, the concrete device
 name from the runner capabilities (also used by Allure Parameters) is preferred.
 Regex selection patterns are never printed as resolved device names.
-Values not returned by the provider are explicitly logged as unavailable rather
+Values not returned by the provider or session API are explicitly logged as unavailable rather
 than replaced with requested device patterns. Device names equal to the UDID
 are excluded; a concrete configured device name is used if no returned model
 name is available. `osVersion` combines OS name and version (for example,
@@ -470,8 +476,9 @@ type, test platform, and captured Device OS version (for example, `Android 14`).
 The Device filter uses the captured cloud display name (for example,
 `device:Galaxy S25`), matching the device value used in execution logs and Allure.
 If the device name cannot be resolved, the missing filter is explicitly logged.
-The timeframe uses the exact timestamps logged as `Session Create Time` and
-`Session End Time`, encoded in UTC for the same instants. If the device OS
+The Dynatrace timeframe ends at the logged `Session End Time` and starts exactly
+five minutes earlier. Both values are encoded as local ISO timestamps with an
+explicit timezone offset. If the device OS
 version is unavailable, the missing filter is explicitly logged.
 The list can contain multiple sessions; it does not identify a
 specific RUM session. Dynatrace login and permission to view sessions are needed.

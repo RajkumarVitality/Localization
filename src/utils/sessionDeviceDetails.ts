@@ -17,7 +17,7 @@ export function sessionTimeLogLine(createdAt: Date, event: 'Create' | 'End'): st
 
 export function captureSessionDeviceDetails(
   sessionId: string, capabilities: unknown, requestedDeviceName?: string, appVersion?: string,
-  runnerCapabilities?: unknown
+  runnerCapabilities?: unknown, sessionApiDeviceName?: string
 ): Readonly<SessionDeviceDetails> {
   const caps = record(capabilities);
   const options = record(caps['LT:Options']);
@@ -38,6 +38,7 @@ export function captureSessionDeviceDetails(
   const version = value('appium:platformVersion', 'platformVersion');
   const returnedNames = [
     caps.device, options.device, options.deviceName,
+    sessionApiDeviceName,
     runner.device, desired.deviceName, desired['appium:deviceName'],
     runnerOptions.deviceName, runner.deviceName, runner['appium:deviceName'],
     requestedDeviceName,

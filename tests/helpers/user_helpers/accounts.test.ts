@@ -25,6 +25,7 @@ test('member fixture is provisioned before use and includes the selected login p
     });
   }
   assert.throws(() => testAccounts.member, /has not been provisioned/);
+  assert.throws(() => testAccounts.details, /details have not been provisioned/);
   const routes: string[] = [];
   let email = '';
   const fetchMock = t.mock.method(globalThis, 'fetch', async (url: string, init: RequestInit) => {
@@ -52,12 +53,19 @@ test('member fixture is provisioned before use and includes the selected login p
   t.mock.method(console, 'log', () => {});
   await initializeTestAccounts();
   assert.equal(testAccounts.member, `mdev--${email}`);
-  assert.equal(routes.length, 10);
+  assert.deepEqual(testAccounts.details, {
+    partyId: 222,
+    insurerCode: '333',
+    dateOfBirth: '2000-02-11',
+    memberUsername: `mdev--${email}`
+  });
+  assert.equal(routes.length, 8);
   assert.ok(routes[3]?.endsWith('/calculateVitalityStatus/444'));
-  assert.ok(routes[6]?.endsWith('/captureLoginEvents/222'));
-  assert.ok(routes[9]?.endsWith('/deleteUserInstruction'));
+  assert.ok(routes[5]?.endsWith('/captureLoginEvents/222'));
+  assert.ok(routes[7]?.endsWith('/deleteUserInstruction'));
 
   fetchMock.mock.mockImplementation(async () => new Response(null, { status: 500 }));
   await assert.rejects(initializeTestAccounts(), /expected HTTP 201 but received HTTP 500/);
   assert.throws(() => testAccounts.member, /has not been provisioned/);
+  assert.throws(() => testAccounts.details, /details have not been provisioned/);
 });

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { captureSessionDeviceDetails, sessionTimeLogLine, sessionDeviceDetails, sessionDeviceLogLines } from '../../src/utils/sessionDeviceDetails.js';
+import { readLambdaTestSessionDeviceName } from '../../src/utils/lambdatestSession.js';
 
 test('formats session creation time using the runner local timezone', () => {
   assert.equal(sessionTimeLogLine(new Date(2026, 10, 16, 17, 27, 57), 'Create'),
@@ -69,6 +70,20 @@ test('prefers the cloud display name over the hardware model code used by Appium
   assert.equal(details.deviceName, 'Galaxy S25');
   assert.ok(sessionDeviceLogLines(details).includes('device: Galaxy S25'));
   assert.ok(sessionDeviceLogLines(details).includes('Device name: Galaxy S25'));
+});
+
+test('prefers the LambdaTest display name over an API hardware model code', async () => {
+  const apiDeviceName = await readLambdaTestSessionDeviceName(
+    'session-api-device-name',
+    'test-user',
+    'test-key',
+    async () => new Response(JSON.stringify({ data: { device_name: 'SM-S931B' } }))
+  );
+  const details = captureSessionDeviceDetails('session-api-device-name', {
+    device: 'Galaxy S25',
+    deviceName: 'SM-S931B'
+  }, 'Galaxy S.*', undefined, undefined, apiDeviceName);
+  assert.equal(details.deviceName, 'Galaxy S25');
 });
 
 test('uses the runner device parameter when browser capabilities only contain a hardware code', () => {

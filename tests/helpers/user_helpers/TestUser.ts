@@ -18,12 +18,27 @@ import { scenarios } from '../../../src/config/runner.js';
 
 let member: string | undefined;
 
+export interface TestAccountDetails {
+  readonly partyId: number;
+  readonly insurerCode: string;
+  readonly dateOfBirth: string;
+  readonly memberUsername: string;
+}
+
+let accountDetails: Readonly<TestAccountDetails> | undefined;
+
 export const testAccounts = {
   get member(): string {
     if (!member) {
       throw new Error('The member account has not been provisioned. User creation must succeed in beforeSession before accessing it.');
     }
     return member;
+  },
+  get details(): Readonly<TestAccountDetails> {
+    if (!accountDetails) {
+      throw new Error('The member account details have not been provisioned.');
+    }
+    return accountDetails;
   }
 };
 
@@ -83,6 +98,7 @@ export async function initializeTestAccountsForSpecs(specs: string[]): Promise<v
 
 export async function initializeTestAccounts(): Promise<void> {
   member = undefined;
+  accountDetails = undefined;
   const environment = (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toLowerCase();
   if (!mobileEnvironments.some(profile => profile === environment)) {
     throw new Error(`VG_ENVIRONMENT must be one of: ${mobileEnvironments.join(', ')}.`);
@@ -128,5 +144,11 @@ export async function initializeTestAccounts(): Promise<void> {
     () => deleteUserInstruction(user.userName, instructions));
   printUserDetails(user);
   member = `${loginPrefix}${user.userName}`;
+  accountDetails = Object.freeze({
+    partyId: user.partyId,
+    insurerCode: user.insurerCode,
+    dateOfBirth: user.bornOn,
+    memberUsername: member
+  });
   console.log(`Member username: ${member}`);
 }

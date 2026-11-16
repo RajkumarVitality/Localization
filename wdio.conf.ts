@@ -5,6 +5,7 @@ import {
   appIdFor,
   deviceDefaults,
   logSharedAppIdWarning,
+  requiredSetting,
   selectedPlatform,
   sessionDashboardUrl,
   setSessionNameFromSpecs,
@@ -18,11 +19,11 @@ import { browser } from '@wdio/globals';
 import { addAttachment, addLabel, addLink, addStep } from '@wdio/allure-reporter';
 import { executionTimeouts } from './src/config/timeoutsHandling.js';
 import { resolveScenario, scenarios, suites } from './src/config/runner.js';
-import { initializeTestAccountsForSpecs } from './tests/helpers/user_helpers/TestUser.js';
+import { initializeTestAccountsForSpecs, testAccounts } from './tests/helpers/user_helpers/TestUser.js';
 import { configuredTenantNumber, userCreationSetting } from './src/config/userCreation.js';
 import { reportDynatraceSessions } from './src/utils/dynatraceSessions.js';
 import { captureSessionDeviceDetails, sessionTimeLogLine, sessionDeviceDetails, sessionDeviceLogLines } from './src/utils/sessionDeviceDetails.js';
-import { readSessionAppVersion } from './src/utils/sessionAppVersion.js';
+import { readLambdaTestSessionDeviceName } from './src/utils/lambdatestSession.js';
 
 const platform: MobilePlatform = selectedPlatform();
 const scenario = resolveScenario(settingOr('LT_SCENARIO', 'loginAndLogout'), platform);
@@ -32,7 +33,6 @@ const timeouts = executionTimeouts();
 let liveSessionUrl: string | undefined;
 let sessionStartTime: Date;
 let sessionCreatedAt: Date;
-let appVersionError: string | undefined;
 
 export const config: WebdriverIO.Config = {
   runner: 'local',
@@ -77,19 +77,21 @@ export const config: WebdriverIO.Config = {
     sessionCreatedAt = new Date();
     console.log(`[MobileSession] ${sessionTimeLogLine(sessionCreatedAt, 'Create')}`);
     console.log(`[MobileSession] App ID: ${appIdFor(platform, scenario)}`);
-    let appVersion: string | undefined;
-    appVersionError = undefined;
+    let sessionApiDeviceName: string | undefined;
     try {
-      appVersion = await readSessionAppVersion(
-        browser, platform, browser.capabilities, appToUninstall(platform)
+      sessionApiDeviceName = await readLambdaTestSessionDeviceName(
+        browser.sessionId,
+        requiredSetting('LT_USERNAME', 'UserName'),
+        requiredSetting('LT_ACCESS_KEY', 'AccessKey')
       );
     } catch (error) {
-      appVersionError = `App version retrieval failed: ${error instanceof Error ? error.message : String(error)}`;
-      console.warn(`[MobileSession] ${appVersionError}`);
+      console.warn(
+        `[MobileSession] LambdaTest device-name lookup failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
     const details = captureSessionDeviceDetails(
-      browser.sessionId, browser.capabilities, deviceDefaults(platform, scenario).device, appVersion,
-      capabilities
+      browser.sessionId, browser.capabilities, deviceDefaults(platform, scenario).device, undefined,
+      capabilities, sessionApiDeviceName
     );
     for (const line of sessionDeviceLogLines(details)) console.log(`[MobileSession] ${line}`);
   },
@@ -102,7 +104,13 @@ export const config: WebdriverIO.Config = {
     executionReporter.log(`App ID: ${appIdFor(platform, scenario)}`);
     if (!sessionDeviceDetails) throw new Error('Session device details were not captured after session initialization.');
     for (const line of sessionDeviceLogLines(sessionDeviceDetails)) executionReporter.log(line);
-    if (appVersionError) executionReporter.log(appVersionError);
+    const accountDetails = testAccounts.details;
+    await executionReporter.captureTextArtifact('provisioned-test-user', [
+      `Party ID: ${accountDetails.partyId}`,
+      `Insurer code: ${accountDetails.insurerCode}`,
+      `Date of birth: ${accountDetails.dateOfBirth}`,
+      `Member username: ${accountDetails.memberUsername}`
+    ].join('\n'));
     for (const [name, value] of Object.entries(sessionDeviceDetails)) {
       if (value) await addLabel(name, value);
     }

@@ -2,9 +2,24 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { DynatraceUtil } from '../../src/utils/DynatraceUtil.js';
 import { dynatraceSessionQuery, fetchDynatraceSessions, reportDynatraceSessions } from '../../src/utils/dynatraceSessions.js';
+import { readLambdaTestSessionDeviceName } from '../../src/utils/lambdatestSession.js';
 
 const start = new Date('2026-10-21T18:27:00.000Z');
 const end = new Date('2026-10-21T20:00:00.000Z');
+
+function localIsoTimestamp(date: Date): string {
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}` +
+    `${sign}${pad(Math.floor(Math.abs(offset) / 60))}` +
+    `:${pad(Math.abs(offset) % 60)}`;
+}
+
+function dynatraceWindowStart(end: Date): Date {
+  return new Date(end.getTime() - 5 * 60 * 1000);
+}
 
 test('queries the execution timeframe and records Dynatrace sessions and sessions link', async t => {
   const calls: Array<{ url: URL; init?: RequestInit }> = [];
@@ -55,7 +70,8 @@ test('creates platform-specific sessions links without requiring an API token', 
     }, async url => { links.push(url); }, start, end, platform);
     const url = new URL(links[0]);
     assert.equal(url.pathname, '/ui/apps/dynatrace.classic.session.segmentation/ui/user-sessions');
-    assert.equal(url.searchParams.get('gtf'), `${start.toISOString()} to ${end.toISOString()}`);
+    assert.equal(url.searchParams.get('gtf'),
+      `${localIsoTimestamp(dynatraceWindowStart(end))} to ${localIsoTimestamp(end)}`);
     assert.equal(url.searchParams.get('gf'), 'all');
     assert.deepEqual(url.searchParams.getAll('filter'), [
       'app:GTB \u254d Central App', 'appType:Mobile', `osFamily:${platform}`
@@ -93,12 +109,24 @@ test('filters Classic session segmentation by the logged creation/end times and 
   }, async url => { links.push(url); }, createdAt, endedAt, 'Android', undefined, 'android 14');
   const url = new URL(links[0]);
   assert.equal(url.pathname, '/ui/apps/dynatrace.classic.session.segmentation/ui/user-sessions');
-  assert.equal(url.searchParams.get('gtf'), `${createdAt.toISOString()} to ${endedAt.toISOString()}`);
+  assert.equal(url.searchParams.get('gtf'),
+    `${localIsoTimestamp(dynatraceWindowStart(endedAt))} to ${localIsoTimestamp(endedAt)}`);
   assert.deepEqual(url.searchParams.getAll('filter'), [
     'app:GTB \u254d Central App', 'appType:Mobile', 'osFamily:Android', 'osVersion:Android 14'
   ]);
   assert.ok(new URL(DynatraceUtil.generateSessionsUrl(createdAt, endedAt, 'iOS', 'iOS 18.0'))
     .searchParams.getAll('filter').includes('osVersion:iOS 18.0'));
+});
+
+test('uses a five-minute local timeframe ending at the session end time', () => {
+  const createdAt = new Date(2026, 10, 16, 21, 17, 0);
+  const endedAt = new Date(2026, 10, 16, 21, 20, 0);
+  const timeframe = new URL(DynatraceUtil.generateSessionsUrl(createdAt, endedAt, 'Android'))
+    .searchParams.get('gtf');
+
+  assert.equal(timeframe,
+    `${localIsoTimestamp(new Date(2026, 10, 16, 21, 15, 0))} to ${localIsoTimestamp(endedAt)}`);
+  assert.match(timeframe ?? '', /^2026-11-16T21:15:00[+-]\d{2}:\d{2} to 2026-11-16T21:20:00[+-]\d{2}:\d{2}$/);
 });
 
 test('applies the captured device name using the confirmed Classic Device filter', async () => {
@@ -116,4 +144,20 @@ test('applies the captured device name using the confirmed Classic Device filter
     .searchParams.getAll('filter').includes('device:iPhone 16'));
   assert.equal(new URL(DynatraceUtil.generateSessionsUrl(start, end, 'Android', undefined, ' '))
     .searchParams.getAll('filter').some(filter => filter.startsWith('device:')), false);
+});
+
+test('passes the device name returned by LambdaTest to the Dynatrace Device filter', async () => {
+  const deviceName = await readLambdaTestSessionDeviceName(
+    'session-1',
+    'test-user',
+    'test-key',
+    async () => Response.json({ data: { device_name: 'Galaxy S25 Ultra' } })
+  );
+  const links: string[] = [];
+  await reportDynatraceSessions({
+    log: () => {},
+    captureTextArtifact: async () => { throw new Error('Unexpected artifact'); }
+  }, async url => { links.push(url); }, start, end, 'Android', undefined, undefined, deviceName);
+
+  assert.ok(new URL(links[0]).searchParams.getAll('filter').includes('device:Galaxy S25 Ultra'));
 });
