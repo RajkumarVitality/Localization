@@ -12,7 +12,7 @@ test('reads the device name from the LambdaTest session API with Basic authentic
     async (input, init) => {
       requestUrl = new URL(String(input));
       requestInit = init;
-      return new Response(JSON.stringify({ data: { device: { name: 'Galaxy S25' } } }));
+      return new Response(JSON.stringify({ data: { device_name: 'Galaxy S25' } }));
     }
   );
 
@@ -30,6 +30,28 @@ test('supports the session API device_name response field', async () => {
     new Response(JSON.stringify({ data: { device_name: 'iPhone 16' } }))
   );
   assert.equal(name, 'iPhone 16');
+});
+
+test('reads only the data.device_name field from session metadata', async () => {
+  const name = await readLambdaTestSessionDeviceName('session-1', 'user', 'key', async () =>
+    new Response(JSON.stringify({
+      data: { device_name: ' SM-S931B ', device: { name: 'Galaxy S25' } },
+      device_name: 'Wrong top-level name'
+    }))
+  );
+  assert.equal(name, 'SM-S931B');
+});
+
+test('retries a 404 while the LambdaTest session record becomes available', async () => {
+  let requests = 0;
+  const name = await readLambdaTestSessionDeviceName('session-1', 'user', 'key', async () => {
+    requests++;
+    return requests < 3
+      ? new Response('', { status: 404 })
+      : new Response(JSON.stringify({ data: { device_name: 'Galaxy S26' } }));
+  });
+  assert.equal(name, 'Galaxy S26');
+  assert.equal(requests, 3);
 });
 
 test('reports unsuccessful and missing-device API responses', async () => {

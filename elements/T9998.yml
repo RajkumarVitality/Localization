@@ -60,7 +60,7 @@ HomeScreen:
     android: "//*[@resource-id='ctrl_btnok_001']"
     ios: "//*[@name='ctrl_btnok_001']"
   allowPermission:
-    android: "//*[@text='Allow']"
+    android: "//*[@text='Allow']|//*[@resource-id='android:id/button3']"
     ios: "//*[@name='ctrl_btnallow_001']"
   profileTab:
     android: "//*[@resource-id='vg_icon_bottom_nav_bar_circle_user']"

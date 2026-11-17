@@ -73,7 +73,7 @@ export const config: WebdriverIO.Config = {
       process.exit(1);
     }
   },
-  async before(capabilities) {
+  async before() {
     sessionCreatedAt = new Date();
     console.log(`[MobileSession] ${sessionTimeLogLine(sessionCreatedAt, 'Create')}`);
     console.log(`[MobileSession] App ID: ${appIdFor(platform, scenario)}`);
@@ -90,8 +90,7 @@ export const config: WebdriverIO.Config = {
       );
     }
     const details = captureSessionDeviceDetails(
-      browser.sessionId, browser.capabilities, deviceDefaults(platform, scenario).device, undefined,
-      capabilities, sessionApiDeviceName
+      browser.sessionId, browser.capabilities, sessionApiDeviceName
     );
     for (const line of sessionDeviceLogLines(details)) console.log(`[MobileSession] ${line}`);
   },
@@ -153,7 +152,7 @@ export const config: WebdriverIO.Config = {
       }
       await reportDynatraceSessions(executionReporter, addLink, sessionCreatedAt, testEndTime, platform,
         process.env.DYNATRACE_ENABLED === 'true' ? process.env.DYNATRACE_ACCESS_TOKEN ?? '' : undefined,
-        sessionDeviceDetails?.osVersion, sessionDeviceDetails?.deviceName);
+        sessionDeviceDetails?.osVersion, sessionDeviceDetails?.deviceName, configuredTenantNumber());
     } catch (error) {
       executionReporter.log(`Dynatrace session reporting failed: ${error instanceof Error ? error.message : String(error)}`);
     }

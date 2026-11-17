@@ -201,7 +201,7 @@ export function buildCapabilities(
     'appium:app': app,
     'appium:fullReset': true,
     'appium:noReset': false,
-    //...(tenantNumber === '34' ? { 'appium:locale': 'nl', 'appium:language': 'NL' } : {}),
+    ...(tenantNumber === '34' ? { 'appium:locale': 'nl', 'appium:language': 'NL' } : {}),
     //...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true, 'appium:resignApp': true } : {}),
     ...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true} : {}),
     ...(platform === 'Android' ? { 'appium:enableScreenshotUnblock': true} : {}),

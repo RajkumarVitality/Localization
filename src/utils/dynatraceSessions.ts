@@ -100,9 +100,10 @@ export async function reportDynatraceSessions(
   platform: MobilePlatform,
   token?: string,
   osVersion?: string,
-  deviceName?: string
+  deviceName?: string,
+  tenantNumber?: string
 ): Promise<void> {
-  const url = DynatraceUtil.generateSessionsUrl(start, end, platform, osVersion, deviceName);
+  const url = DynatraceUtil.generateSessionsUrl(start, end, platform, osVersion, deviceName, tenantNumber);
   reporter.log(`Dynatrace sessions for this execution window (may include other sessions): ${url}`);
   await addLink(url, 'Open Dynatrace sessions');
   if (token === undefined) return;

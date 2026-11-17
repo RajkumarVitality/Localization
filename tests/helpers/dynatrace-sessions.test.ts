@@ -83,6 +83,20 @@ test('creates platform-specific sessions links without requiring an API token', 
   assert.throws(() => DynatraceUtil.generateSessionsUrl(end, start, 'Android'), /time range is invalid/);
 });
 
+test('uses the ASR (GTB) Dynatrace session link for tenant 34', async () => {
+  const links: string[] = [];
+  await reportDynatraceSessions({
+    log: () => {},
+    captureTextArtifact: async () => { throw new Error('Unexpected artifact'); }
+  }, async url => { links.push(url); }, start, end, 'Android', undefined, undefined, undefined, '34');
+
+  const url = new URL(links[0]);
+  assert.equal(url.origin, 'https://ckd69549.apps.dynatrace.com');
+  assert.equal(url.pathname, '/ui/apps/dynatrace.classic.session.segmentation/ui/user-sessions');
+  assert.ok(url.searchParams.getAll('filter').includes('app:ASR (GTB)'));
+  assert.ok(!url.searchParams.getAll('filter').includes('app:GTB \u254d Central App'));
+});
+
 test('supports Android, empty results and reports query errors explicitly', async t => {
   assert.match(dynatraceSessionQuery('Android'), /matchesValue\(os.name, "Android"\)/);
   const fetchMock = t.mock.method(globalThis, 'fetch', async () => Response.json({

@@ -45,7 +45,7 @@ LoginScreen:
     ios: "//*[@name='txtunabletologincopy_001']"
     expected: "Your account has been locked due to too many incorrect login attempts"
   dismissLockout:
-    android: "//*[@resource-id='ctrl_btnok_001']"
+    android: "//*[@resource-id='ctrl_btnok_001']|//*[@text='PASS']"
     ios: "//*[@name='ctrl_btnok_001']"
 
 HomeScreen:
@@ -60,7 +60,7 @@ HomeScreen:
     android: "//*[@resource-id='ctrl_btnok_001']"
     ios: "//*[@name='ctrl_btnok_001']"
   allowPermission:
-    android: "//*[@text='Allow']"
+    android: "//*[@text='Allow']|//*[@text='Toestaan']|//*[@resource-id='android:id/button3']"
     ios: "//*[@name='ctrl_btnallow_001']"
   profileTab:
     android: "//*[@resource-id='vg_icon_bottom_nav_bar_circle_user']"
@@ -210,14 +210,14 @@ MHAQuestionsScreen:
   firstQuestion:
     android: "//*[@resource-id='question_0']"
     ios: "//*[@name='question_0']"
-    expected: "Mental health history"
+    expected: "Have you ever been diagnosed with a mental health condition (MHC), for example: depression, anxiety, panic disorders, bipolar disorder or Obsessive Compulsive Disorder (OCD)?"
   sectionName:
     android: "//*[@resource-id='section_name_text']"
     ios: "//*[@name='section_name_text']"
   firstAnswer:
     android: "//*[@resource-id='answer_option_0']"
     ios: "//*[@name='answer_option_0']"
-    expected: "Mental health history"
+    expected: "Yes"
   questionByIndex:
     android: "//*[@resource-id='question_{index}']"
     ios: "~question_{index}"

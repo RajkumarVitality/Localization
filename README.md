@@ -471,7 +471,8 @@ name is available. `osVersion` combines OS name and version (for example,
 identifier; device-specific Dynatrace filters require a verified mapping.
 
 Each test writes an **Open Dynatrace sessions** link to `execution.log` and
-Allure. It opens Classic User Sessions filtered to GTB Central App, mobile app
+Allure. It opens Classic User Sessions filtered to GTB Central App (or ASR (GTB)
+for tenant 34), mobile app
 type, test platform, and captured Device OS version (for example, `Android 14`).
 The Device filter uses the captured cloud display name (for example,
 `device:Galaxy S25`), matching the device value used in execution logs and Allure.
