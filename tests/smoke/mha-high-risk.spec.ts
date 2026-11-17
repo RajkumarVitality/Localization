@@ -50,7 +50,7 @@ describe('high-risk mental health assessment journey', () => {
     executionReporter.log('Opened MHA assessment results.');
     await mhaScreen.assertCompltedDate();
     executionReporter.log('Validated completed date.');
-    await mhaScreen.assertRiskType('High risk');
+    await mhaScreen.assertRiskType('High');
     executionReporter.log('Validated High risk result.');
   });
 });

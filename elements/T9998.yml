@@ -167,6 +167,10 @@ MHALandingScreen:
   riskType:
     android: "//*[@resource-id='vg_risk_text']"
     ios: "//*[@name='vg_risk_text']"
+    expected:
+      High: "High risk"
+      Low: "Low risk"
+      Moderate: "Moderate risk"
 
 MHASectionScreen:
   startButtonEnabled:

@@ -218,6 +218,8 @@ for the selected profile, so tenant `9998` uses `T9998.yml` and tenant `34` uses
 In non-interactive CI runs, prompts are skipped; set `PLATFORM`,
 `VG_ENVIRONMENT`, and the profile-specific tenant variable (for example,
 `VG_MDEV_TENANT_NUMBER`) in the environment instead.
+Selecting tenant 34 adds `language: nl` and `locale: nl` inside `LT:Options`
+for Android and iOS. Other tenants do not receive these options.
 For non-interactive runs, supply `appId=lt://APP_ID` in the environment to
 override app settings from `lambdatest.properties`.
 

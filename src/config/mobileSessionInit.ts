@@ -192,6 +192,10 @@ export function buildCapabilities(
 
   const profile = userCreationProfilePrefix(userCreationSetting('VG_ENVIRONMENT') ?? 'mdev');
   const tenantNumber = userCreationSetting(`${profile}TENANT_NUMBER`);
+  if (tenantNumber === '34') {
+    ltOptions.language = 'nl';
+    ltOptions.locale = 'nl';
+  }
 
   return Object.assign({
     platformName: platform,
@@ -201,7 +205,7 @@ export function buildCapabilities(
     'appium:app': app,
     'appium:fullReset': true,
     'appium:noReset': false,
-    ...(tenantNumber === '34' ? { 'appium:locale': 'nl', 'appium:language': 'NL' } : {}),
+    ...(tenantNumber === '34' ? { 'appium:locale': 'nl', 'appium:language': 'nl' } : {}),
     //...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true, 'appium:resignApp': true } : {}),
     ...(platform === 'iOS' ? { 'appium:autoAcceptAlerts': true} : {}),
     ...(platform === 'Android' ? { 'appium:enableScreenshotUnblock': true} : {}),

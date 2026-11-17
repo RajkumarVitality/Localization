@@ -12,20 +12,24 @@ test('tenant 34 adds Dutch locale capabilities and other tenants do not', () => 
   ];
   const previous = new Map(keys.map(key => [key, process.env[key]]));
   try {
-    //process.env.VG_ENVIRONMENT = 'mdev';
+    process.env.VG_ENVIRONMENT = 'mdev';
     process.env.LT_USERNAME = 'test-user';
     process.env.LT_ACCESS_KEY = 'test-key';
     process.env.appId = 'lt://test-app';
 
-    process.env.VG_MDEV_TENANT_NUMBER = '34';
-    const tenant34 = buildCapabilities('Android', 'loginAndLogout', 'loginAndLogout');
-    assert.equal(tenant34['appium:locale'], 'nl');
-    assert.equal(tenant34['appium:language'], 'NL');
+    for (const platform of ['Android', 'iOS'] as const) {
+      process.env.VG_MDEV_TENANT_NUMBER = '34';
+      const tenant34 = buildCapabilities(platform, 'loginAndLogout', 'loginAndLogout');
+      assert.equal(tenant34['LT:Options']?.language, 'nl');
+      assert.equal(tenant34['LT:Options']?.locale, 'nl');
 
-    process.env.VG_MDEV_TENANT_NUMBER = '9998';
-    const tenant9998 = buildCapabilities('Android', 'loginAndLogout', 'loginAndLogout');
-    assert.equal(Object.hasOwn(tenant9998, 'appium:locale'), false);
-    assert.equal(Object.hasOwn(tenant9998, 'appium:language'), false);
+      process.env.VG_MDEV_TENANT_NUMBER = '9998';
+      const tenant9998 = buildCapabilities(platform, 'loginAndLogout', 'loginAndLogout');
+      assert.equal(Object.hasOwn(tenant9998, 'appium:locale'), false);
+      assert.equal(Object.hasOwn(tenant9998, 'appium:language'), false);
+      assert.equal(tenant9998['LT:Options']?.language, undefined);
+      assert.equal(tenant9998['LT:Options']?.locale, undefined);
+    }
   } finally {
     for (const [key, value] of previous) {
       if (value === undefined) delete process.env[key];

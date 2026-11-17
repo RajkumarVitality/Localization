@@ -59,8 +59,8 @@ export class MHALandingScreen extends BaseScreen {
     await this.assertTextContains(await this.element(mobileElements.MHALandingScreen.completedDate.android, mobileElements.MHALandingScreen.completedDate.ios), expectedText(mobileElements.MHALandingScreen.completedDate));
   
   }
-  async assertRiskType(expectedRisk: 'Low risk' | 'Moderate risk' | 'High risk'): Promise<void> {
-    await this.assertTextContains(await this.element(mobileElements.MHALandingScreen.riskType.android, mobileElements.MHALandingScreen.riskType.ios), expectedRisk);
+  async assertRiskType(risk: 'Low' | 'Moderate' | 'High'): Promise<void> {
+    await this.assertTextContains(await this.element(mobileElements.MHALandingScreen.riskType.android, mobileElements.MHALandingScreen.riskType.ios), expectedText(mobileElements.MHALandingScreen.riskType, risk));
   }
 }
   

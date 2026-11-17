@@ -2,7 +2,7 @@ WelcomeScreen:
   welcomeMessage:
     android: "//*[@resource-id='txttheworldslargestsciencebased_001']"
     ios: "//*[@name='txttheworldslargestsciencebased_001']"
-    expected: "The world’s largest science-based behavioural change program that rewards you for making healthier choices."
+    expected: "'s Werelds grootste wetenschappelijk onderbouwde programma voor gedragsverandering dat je beloont voor het maken van gezondere keuzes."
   nextButton:
     android: "//*[@resource-id='btn_btn_next']"
     ios: "//*[@name='btn_btn_next']"
@@ -11,7 +11,7 @@ HealthyLivingScreen:
   welcomeMessage:
     android: "//*[@resource-id='reg_welcome_txthealthliv_001']"
     ios: "//*[@name='reg_welcome_txthealthliv_001']"
-    expected: "Healthy living has never been this rewarding"
+    expected: "Gezond leven heeft nu nog meer voordelen"
   loginButton:
     android: "//*[@resource-id='ctrl_btnlogin_001']"
     ios: "//*[@name='ctrl_btnlogin_001']"
@@ -20,7 +20,7 @@ LoginScreen:
   hello:
     android: "//*[@resource-id='txthello_001']"
     ios: "//*[@name='txthello_001']"
-    expected: "Hello"
+    expected: "Hallo"
   usernameLabel:
     android: "//*[@resource-id='txtlblemailaddress_001']"
     ios: "//*[@name='txtlblemailaddress_001']"
@@ -36,16 +36,16 @@ LoginScreen:
   incorrectPasswordMessage:
     android: "//*[@resource-id='vg_text_popup_title']"
     ios: "//*[@name='vg_text_popup_title']"
-    expected: "Incorrect email or password"
+    expected: "Onjuist e-mailadres of wachtwoord"
   gotItButton:
     android: "//*[@resource-id='ctrl_btngotit_001']"
     ios: "//*[@name='ctrl_btngotit_001']"
   lockoutMessage:
     android: "//*[@resource-id='txtunabletologincopy_001']"
     ios: "//*[@name='txtunabletologincopy_001']"
-    expected: "Your account has been locked due to too many incorrect login attempts"
+    expected: "Je account is vergrendeld door te veel foutieve aanmeldpogingen."
   dismissLockout:
-    android: "//*[@resource-id='ctrl_btnok_001']|//*[@text='PASS']"
+    android: "//*[@resource-id='ctrl_btnok_001']"
     ios: "//*[@name='ctrl_btnok_001']"
 
 HomeScreen:
@@ -53,14 +53,14 @@ HomeScreen:
     android: "//*[@resource-id='vg_text_header_greeting']"
     ios: "//*[@name='vg_text_header_greeting']"
     expected:
-      morning: "Good morning"
-      afternoon: "Good afternoon"
-      evening: "Good evening"
+      morning: "Goedemorgen"
+      afternoon: "Goedemiddag"
+      evening: "Goedenavond"
   dismissNotification:
     android: "//*[@resource-id='ctrl_btnok_001']"
     ios: "//*[@name='ctrl_btnok_001']"
   allowPermission:
-    android: "//*[@text='Allow']|//*[@text='Toestaan']|//*[@resource-id='android:id/button3']"
+    android: "//*[@text='Allow']|//*[@text='Toestaan']"
     ios: "//*[@name='ctrl_btnallow_001']"
   profileTab:
     android: "//*[@resource-id='vg_icon_bottom_nav_bar_circle_user']"
@@ -94,7 +94,7 @@ SettingsScreen:
   logoutConfirmation:
     android: "//*[@resource-id='dialog_body_areyouwanttologout_001']"
     ios: "//*[@name='dialog_body_areyouwanttologout_001']"
-    expected: "Are you sure you want to log out?"
+    expected: "Weet je zeker dat je wilt uitloggen?"
   confirmLogout:
     android: "//*[@resource-id='dialog_btn1_yeslogout_001']"
     ios: "//*[@name='dialog_btn1_yeslogout_001']"
@@ -103,7 +103,7 @@ ActivityScreen:
   heading:
     android: "//*[@resource-id='txtactivities_001']"
     ios: "//*[@name='txtactivities_001']"
-    expected: "Activities"
+    expected: "Activiteiten"
   mhaFeedcard:
     android: "//*[@resource-id='Mental Health Assessment Tracking Card_2']"
     ios: "//*[@name='Mental Health Assessment Tracking Card_2']"
@@ -140,17 +140,17 @@ MHALandingScreen:
   heading:
     android: "//*[@resource-id='txtmentalwellbeingassessment_001']"
     ios: "//*[@name='txtmentalwellbeingassessment_001']"
-    expected: "Mental health assessment"
+    expected: "Mentale gezondheidsvragen"
   points:
     android: "//*[@resource-id='txtpoints_001']"
     ios: "//*[@name='txtpoints_001']"
     expected:
-      initial: "0/1.000 POINTS"
-      lowRisk: "500/1.000 POINTS"
+      initial: "0/1.000 PUNTEN"
+      lowRisk: "500/1.000 PUNTEN"
   time:
     android: "//*[@resource-id='txttime005']"
     ios: "//*[@name='txttime005']"
-    expected: "Takes Less than 5 minutes to complete"
+    expected: "Duurt minder dan 5 minuten om in te vullen"
   startButton:
     android: "//*[@resource-id='btnstartassessment_001'] | //*[@resource-id='btn_ctrl_btnstartassessment_001']"
     ios: "//*[@name='btnstartassessment_001'] | //*[@name='btn_ctrl_btnstartassessment_001']"
@@ -163,10 +163,14 @@ MHALandingScreen:
   completedDate:
     android: "//*[@resource-id='txtcompleteddate_001']"
     ios: "//*[@name='txtcompleteddate_001']"
-    expected: "Completed:"
+    expected: "Afgerond op:"
   riskType:
     android: "//*[@resource-id='vg_risk_text']"
     ios: "//*[@name='vg_risk_text']"
+    expected:
+      High: "Hoog risico"
+      Low: "Laag risico"
+      Moderate: "Gemiddeld risico"
 
 MHASectionScreen:
   startButtonEnabled:
@@ -178,7 +182,7 @@ MHASectionScreen:
   heading:
     android: "//*[@resource-id='txtmentalwellbeingassessment_001']"
     ios: "//*[@name='txtmentalwellbeingassessment_001']"
-    expected: "Mental health assessment"
+    expected: "Mentale gezondheidsvragen"
 
 MHAQuestionsScreen:
   firstSectionHeading:
@@ -203,21 +207,21 @@ MHAQuestionsScreen:
   exitConfirmation:
     android: "//*[@resource-id='txtareyousureyouwanttoclosethesurvey_001']"
     ios: "//*[@name='txtareyousureyouwanttoclosethesurvey_001']"
-    expected: "Are you sure you want to exit this assessment?"
+    expected: "Weet je zeker dat je deze vragenlijst wilt afsluiten?"
   confirmExit:
     android: "//*[@resource-id='ctrl_txtyes_001']"
     ios: "//*[@name='ctrl_txtyes_001']"
   firstQuestion:
     android: "//*[@resource-id='question_0']"
     ios: "//*[@name='question_0']"
-    expected: "Have you ever been diagnosed with a mental health condition (MHC), for example: depression, anxiety, panic disorders, bipolar disorder or Obsessive Compulsive Disorder (OCD)?"
+    expected: "Mental health history"
   sectionName:
     android: "//*[@resource-id='section_name_text']"
     ios: "//*[@name='section_name_text']"
   firstAnswer:
     android: "//*[@resource-id='answer_option_0']"
     ios: "//*[@name='answer_option_0']"
-    expected: "Yes"
+    expected: "Mental health history"
   questionByIndex:
     android: "//*[@resource-id='question_{index}']"
     ios: "~question_{index}"
@@ -229,11 +233,11 @@ MHASuccessfulCompleteScreen:
   completionMessage:
     android: "//*[@resource-id='txtmentalwellbeingasessmentcomplete_001']"
     ios: "//*[@name='txtmentalwellbeingasessmentcomplete_001']"
-    expected: "Great work on completing your mental health assessment"
+    expected: "Goed gedaan, je hebt de mentale gezondheidsvragenlijst afgerond"
   viewResultsLabel:
     android: "//*[@resource-id='ctrl_btncontinuetofeedback_001']"
     ios: "//*[@name='ctrl_btncontinuetofeedback_001']"
-    expected: "View results"
+    expected: "Bekijk resultaten"
   viewResultsButton:
     android: "//*[@resource-id='btn_ctrl_btncontinuetofeedback_001']"
     ios: "//*[@name='btn_ctrl_btncontinuetofeedback_001']"

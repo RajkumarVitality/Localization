@@ -52,7 +52,7 @@ describe('mental health assessment journey', () => {
     executionReporter.log('Validated low risk points updated.');
     await mhaScreen.assertCompltedDate();
     executionReporter.log('Validated completed date.');
-    await mhaScreen.assertRiskType('Low risk');
+    await mhaScreen.assertRiskType('Low');
     executionReporter.log('Validated Low risk result.');
   });
 });
