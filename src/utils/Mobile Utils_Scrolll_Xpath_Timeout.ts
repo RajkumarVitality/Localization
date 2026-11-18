@@ -4,6 +4,10 @@ import { settingOr, type MobilePlatform } from '../config/mobileSessionInit.js';
 import { executionTimeouts } from '../config/timeoutsHandling.js';
 import { executionReporter } from './ExecutionReporter.js';
 
+export class RequiredMobileElementError extends Error {
+  override name = 'RequiredMobileElementError';
+}
+
 export class MobileSession {
   readonly isIOS: boolean;
   readonly waitTimeout: number;
@@ -21,6 +25,10 @@ export class MobileSession {
     try {
       return await operation(false);
     } catch (error) {
+      if (error instanceof RequiredMobileElementError) {
+        executionReporter.log(`${description} failed; aborting current test without retry: ${error.message}`);
+        throw error;
+      }
       executionReporter.log(`${description} failed; retrying once: ${error instanceof Error ? error.message : String(error)}`);
       return await operation(true);
     }
@@ -40,7 +48,7 @@ export class MobileSession {
       if (Date.now() >= deadline) break;
       await browser.pause(250);
     } while (Date.now() <= deadline);
-    throw new Error(`Element was not found within ${timeout} ms: ${selector}`);
+    throw new RequiredMobileElementError(`Element was not found within ${timeout} ms: ${selector}`);
   }
 
   async waitForVisibleElement(selector: string, timeout = this.waitTimeout): Promise<ChainablePromiseElement> {
@@ -57,7 +65,7 @@ export class MobileSession {
       if (Date.now() >= deadline) break;
       await browser.pause(250);
     } while (Date.now() <= deadline);
-    throw new Error(`Element was not visible within ${timeout} ms: ${selector}`);
+    throw new RequiredMobileElementError(`Element was not visible within ${timeout} ms: ${selector}`);
   }
 
   async isElementVisible(selector: string, timeout = 5_000): Promise<boolean> {
@@ -65,7 +73,7 @@ export class MobileSession {
       await this.waitForVisibleElementAttempt(selector, timeout);
       return true;
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith('Element was not visible within ')) {
+      if (error instanceof RequiredMobileElementError) {
         return false;
       }
       throw error;

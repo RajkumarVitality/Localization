@@ -10,6 +10,7 @@ import {
   sessionDashboardUrl,
   setSessionNameFromSpecs,
   settingOr,
+  setting,
   shouldOpenLiveSession
 } from './src/config/mobileSessionInit.js';
 import { executionReporter } from './src/utils/ExecutionReporter.js';
@@ -20,10 +21,11 @@ import { addAttachment, addLabel, addLink, addStep } from '@wdio/allure-reporter
 import { executionTimeouts } from './src/config/timeoutsHandling.js';
 import { resolveScenario, scenarios, suites } from './src/config/runner.js';
 import { initializeTestAccountsForSpecs, testAccounts } from './tests/helpers/user_helpers/TestUser.js';
-import { configuredTenantNumber, userCreationSetting } from './src/config/userCreation.js';
+import { configuredTenantNumber, mobileEnvironments, userCreationProfilePrefix, userCreationSetting } from './src/config/userCreation.js';
 import { reportDynatraceSessions } from './src/utils/dynatraceSessions.js';
 import { captureSessionDeviceDetails, sessionTimeLogLine, sessionDeviceDetails, sessionDeviceLogLines } from './src/utils/sessionDeviceDetails.js';
 import { readLambdaTestSessionDeviceName } from './src/utils/lambdatestSession.js';
+import { reportFailureAnalysis } from './src/utils/failureAnalysis.js';
 
 const platform: MobilePlatform = selectedPlatform();
 const scenario = resolveScenario(settingOr('LT_SCENARIO', 'loginAndLogout'), platform);
@@ -139,6 +141,26 @@ export const config: WebdriverIO.Config = {
       executionReporter.log(`Test failed: ${result.error.message}`);
       await executionReporter.captureScreenshot('listener-failure');
       await executionReporter.capturePageSource('listener-failure');
+      await reportFailureAnalysis(
+        result.error.stack ?? result.error.message,
+        {
+          platform,
+          device: sessionDeviceDetails?.deviceName,
+          osVersion: sessionDeviceDetails?.osVersion,
+          appVersion: sessionDeviceDetails?.appVersion
+        },
+        executionReporter,
+        addLabel,
+        [
+          'LT_USERNAME', 'LT_ACCESS_KEY', 'UserName', 'AccessKey',
+          'APP_PASSWORD', 'APP_USERNAME', 'INCORRECT_APP_PASSWORD', 'APP_INCORRECT_PASSWORD'
+        ].map(key => setting(key) ?? '').concat(
+          mobileEnvironments.flatMap(profile => ['API_BEARER_TOKEN', 'API_BASIC_AUTH'].flatMap(suffix => {
+            const value = userCreationSetting(`${userCreationProfilePrefix(profile)}${suffix}`) ?? '';
+            return [value, value.replace(/^(Basic|Bearer)\s+/i, '')];
+          }))
+        )
+      );
     } else {
       await executionReporter.captureScreenshot('test-passed');
       executionReporter.log('Test passed.');

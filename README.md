@@ -54,6 +54,15 @@ This installs reusable AI instructions, not a LambdaTest API/MCP connection
 or a Copilot SDK generator service. It does not upload apps, provision members,
 or launch paid device sessions.
 
+## Local AI failure analysis
+
+An opt-in Ollama analyzer categorizes failed tests and attaches **AI Failure
+Analysis** to Allure without changing their original status. It uses sanitized
+error text, recent framework logs, and available device metadata, not screenshots
+or page dumps. See the [failure-analysis guide](./docs/failure-analysis.md)
+for local model setup, settings, categories, limitations, and the read-only
+**Appium Failure Analysis** Copilot agent.
+
 ## Mobile framework MCP server and agent
 
 For architecture, tool contracts, client setup, troubleshooting, and PoC
@@ -246,11 +255,12 @@ Optional settings:
 
 ## Run the scenarios
 
-Failed mobile element lookups, clicks, text entry, and UI assertions are retried
-once (two attempts total). The second failure aborts the test case. Visibility
-waits remain enabled on the first attempt; an element lookup on retry is a
-single immediate check, without a second visibility wait. Only the failed operation is repeated,
-not the entire test case; retry details appear in the execution log.
+Missing required elements abort the current test when the configured
+existence/visibility wait expires, without another lookup attempt. Exhausting
+the configured scroll limit also aborts without repeating the scroll sequence.
+Optional visibility checks can still return false. Other operation failures
+(such as stale-element clicks or text assertions) retain their existing single
+retry; only the failed operation is repeated, not the entire test case.
 Failure evidence, reporting, and session cleanup still run after the test
 body aborts. Other scenarios in the pack are not cancelled.
 

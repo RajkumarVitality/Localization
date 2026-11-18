@@ -32,3 +32,8 @@ INCORRECT_APP_PASSWORD=YOUR_INTENTIONALLY_INCORRECT_PASSWORD
 # version=17
 # appId=lt://APP...
 # LT_ARTIFACTS_DIR=target/test-artifacts
+
+# Local Ollama failure triage uses environment variables only (disabled by default).
+# FAILURE_ANALYSIS_ENABLED=true
+# FAILURE_ANALYSIS_MODEL=qwen2.5:7b
+# FAILURE_ANALYSIS_TIMEOUT_MS=15000

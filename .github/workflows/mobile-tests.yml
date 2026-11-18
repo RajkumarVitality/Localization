@@ -1,0 +1,146 @@
+name: Mobile Test Suites
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: Tenant number
+        type: choice
+        options:
+          - "9998"
+          - "34"
+        default: "9998"
+        required: true
+      environment:
+        description: "9998: ca-test / ca-dev / mdev-9998; 34: mdev / uat"
+        type: choice
+        options:
+          - ca-test
+          - ca-dev
+          - mdev-9998
+          - mdev
+          - uat
+        default: ca-test
+        required: true
+      platform:
+        description: Mobile platform
+        type: choice
+        options:
+          - Android
+          - iOS
+        default: Android
+        required: true
+      suite:
+        description: Test suite
+        type: choice
+        options:
+          - smoke
+          - regression
+        default: smoke
+        required: true
+      app_id:
+        description: Uploaded app ID compatible with the selected platform (lt://APP...)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-tests
+  cancel-in-progress: false
+
+jobs:
+  mobile-tests:
+    runs-on: macos-latest
+    # For private backend access, use a VPN-connected runner instead:
+    # runs-on: [self-hosted, macOS, mobile-tests]
+    timeout-minutes: 180
+    environment: mobile-tests
+    env:
+      CI: "true"
+      TENANT_NUMBER: ${{ inputs.tenant }}
+      VG_ENVIRONMENT: ${{ inputs.environment }}
+      PLATFORM: ${{ inputs.platform }}
+      SUITE: ${{ inputs.suite }}
+      appId: ${{ inputs.app_id }}
+      LT_SCENARIO: loginAndLogout
+      LT_OPEN_LIVE_SESSION: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate configuration and run suite
+        shell: bash
+        env:
+          CLOUD_CONFIG: ${{ secrets.LT_PROPERTIES }}
+          USER_CONFIG: ${{ secrets.USER_CREATION_PROPERTIES }}
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -f lambdatest.properties user-creation.properties' EXIT
+
+          if [[ -z "$CLOUD_CONFIG" || -z "$USER_CONFIG" ]]; then
+            echo "LT_PROPERTIES and USER_CREATION_PROPERTIES secrets are required."
+            exit 1
+          fi
+          printf '%s\n' "$CLOUD_CONFIG" > lambdatest.properties
+          printf '%s\n' "$USER_CONFIG" > user-creation.properties
+          unset CLOUD_CONFIG USER_CONFIG
+
+          node --import tsx --input-type=module <<'NODE'
+          import {
+            mobileEnvironments,
+            userCreationProfilePrefix,
+            userCreationSetting
+          } from './src/config/userCreation.ts';
+
+          const tenant = process.env.TENANT_NUMBER;
+          const profile = process.env.VG_ENVIRONMENT;
+          const allowed = {
+            '9998': ['ca-test', 'ca-dev', 'mdev-9998'],
+            '34': ['mdev', 'uat']
+          };
+          if (!Object.hasOwn(allowed, tenant) || !allowed[tenant].includes(profile)) {
+            throw new Error('Invalid tenant/environment selection. Tenant 9998 supports ca-test, ca-dev, mdev-9998; tenant 34 supports mdev, uat.');
+          }
+          const configured = userCreationSetting(`${userCreationProfilePrefix(profile)}TENANT_NUMBER`);
+          if (configured !== tenant) {
+            const matches = mobileEnvironments.filter(candidate =>
+              userCreationSetting(`${userCreationProfilePrefix(candidate)}TENANT_NUMBER`) === tenant
+            );
+            throw new Error(`Selected profile is not configured for tenant ${tenant}. Configured matching profiles: ${matches.join(', ') || 'none'}. Check USER_CREATION_PROPERTIES.`);
+          }
+          if (!['Android', 'iOS'].includes(process.env.PLATFORM)) {
+            throw new Error('Unsupported mobile platform.');
+          }
+          if (!/^lt:\/\/APP[A-Za-z0-9_-]+$/.test(process.env.appId ?? '')) {
+            throw new Error('Provide an uploaded app ID in lt://APP... format.');
+          }
+          console.log(`Configuration validated: tenant ${tenant}, environment ${profile}, platform ${process.env.PLATFORM}.`);
+          NODE
+
+          case "$SUITE" in
+            smoke|regression)
+              npm test -- --suite "$SUITE" --maxInstances 2
+              ;;
+            *)
+              echo "Unsupported suite."
+              exit 1
+              ;;
+          esac
+
+      - name: Remove credential files
+        if: always()
+        shell: bash
+        run: rm -f lambdatest.properties user-creation.properties

@@ -17,8 +17,10 @@ export class ExecutionReporter {
   private logPath?: string;
   private writeQueue: Promise<void> = Promise.resolve();
   private reportSink?: ReportSink;
+  private recentLines = '';
 
   startTest(suiteName: string, testName: string, reportSink?: ReportSink): void {
+    this.recentLines = '';
     this.reportSink = reportSink;
     const runName = `${suiteName || 'suite'}-${testName || 'test'}`;
     this.artifactDirectory = path.join(
@@ -30,6 +32,7 @@ export class ExecutionReporter {
   }
 
   log(message: string): void {
+    this.recentLines = `${this.recentLines}${message}\n`.slice(-32_000);
     const line = `[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${message}`;
     console.log(line);
     if (this.logPath) {
@@ -45,6 +48,10 @@ export class ExecutionReporter {
           console.error(`Unable to record execution log or report step: ${String(error)}`);
         });
     }
+  }
+
+  recentExecutionLog(): string {
+    return this.recentLines;
   }
 
   async captureScreenshot(label: string): Promise<string | undefined> {
@@ -123,6 +130,7 @@ export class ExecutionReporter {
     this.artifactDirectory = undefined;
     this.logPath = undefined;
     this.reportSink = undefined;
+    this.recentLines = '';
   }
 }
 

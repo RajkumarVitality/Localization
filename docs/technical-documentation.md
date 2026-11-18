@@ -485,10 +485,13 @@ Specs should express journeys using those methods rather than duplicate
 low-level selectors.
 
 `MobileSession` contains shared WebdriverIO operations and W3C touch actions.
-Its `retryOnce` mechanism logs the first failure and retries that operation
-once. For wrapped lookups/clicks/text entry, the first attempt uses the
-configured visibility/existence timeout; the retry performs an immediate
-check rather than repeating the entire wait.
+Required element existence/visibility waits throw `RequiredMobileElementError`
+on expiration. `retryOnce` logs and propagates that error without retrying,
+including through nested assertion wrappers. Exhausting a scroll search uses
+the same error and does not repeat the search. Optional visibility probes still
+return false. Other operation failures retain their existing one retry, with
+an immediate lookup rather than another full wait. The current test stops,
+but reporting/cleanup and other tests in the suite remain enabled.
 
 | Setting | Default | Scope |
 | --- | --- | --- |
@@ -612,7 +615,40 @@ missing-import failures in existing helper tests. Record baseline failures
 separately, and do not report a passing full build based solely on focused
 checks. No live device run was performed for this documentation task.
 
+### GitHub Actions
+
+The manual [Mobile Test Suites workflow](../.github/workflows/mobile-tests.yml)
+accepts tenant, environment, platform, suite, and uploaded app ID inputs.
+After committing it to the default branch, use **Actions > Mobile Test Suites >
+Run workflow**. Actions does not display the terminal selection prompts.
+
+Tenant `9998` permits `ca-test`, `ca-dev`, or `mdev-9998`; tenant `34` permits
+`mdev` or `uat`. GitHub choice lists cannot change dynamically based on another
+input, so all profiles appear and the workflow rejects incompatible selections.
+It also verifies that the selected profile's configured tenant matches the
+input; it never silently rewrites a provisioning profile's tenant.
+
+Create `LT_PROPERTIES` and `USER_CREATION_PROPERTIES` Actions secrets with
+the complete configured mobile/cloud and provisioning properties contents.
+Create the GitHub environment `mobile-tests` and configure required reviewers
+where supported. The workflow input maps to `VG_ENVIRONMENT`; the app ID maps
+to the existing `appId` override. The selected tenant is checked against the
+profile's prefixed `TENANT_NUMBER`, not used as a new runtime setting reader.
+
+The workflow uses a GitHub-hosted macOS runner and a two-worker limit for
+either suite. If the backend requires private network access, replace
+`macos-latest` with a self-hosted macOS runner labeled `mobile-tests` that has
+the necessary connectivity. Cloud devices still run on LambdaTest.
+Runs create accounts and consume cloud capacity; regression includes lockout.
+Credential files are removed after the run. Artifacts are not uploaded
+automatically because reports can contain member details.
+
 ## 17. Optional AI and MCP extension
+
+An opt-in local Ollama [failure-analysis integration](./failure-analysis.md)
+classifies failures reaching `afterTest` and adds advisory Allure findings.
+It preserves the original test status and does not process screenshots or
+page dumps. Local model installation and explicit enablement are required.
 
 The framework can be maintained without AI tooling. Two workspace custom
 agents provide guidance for generation and framework-aware development;

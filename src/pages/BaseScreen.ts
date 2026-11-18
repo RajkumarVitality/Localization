@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { $$ } from '@wdio/globals';
 import type { ChainablePromiseElement } from 'webdriverio';
-import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
+import { MobileSession, RequiredMobileElementError } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { executionReporter } from '../utils/ExecutionReporter.js';
 
 export abstract class BaseScreen {
@@ -46,7 +46,7 @@ export abstract class BaseScreen {
       }
     }
 
-    throw new Error(`Element not found after ${maxSwipes} upward scrolls: ${targetSelector}`);
+    throw new RequiredMobileElementError(`Element not found after ${maxSwipes} upward scrolls: ${targetSelector}`);
   }
 
   async printMobileElementsByXpath(xpath: string): Promise<WebdriverIO.ElementArray> {

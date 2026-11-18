@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import { _setGlobal } from '@wdio/globals';
 import { LoginScreen } from '../../src/pages/LoginScreen.js';
 import { expectedText, mobileElements } from '../../src/pages/mobileElements.js';
-import { MobileSession } from '../../src/utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
+import { MobileSession, RequiredMobileElementError } from '../../src/utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
+import { BaseScreen } from '../../src/pages/BaseScreen.js';
 
 test('visibility timeout gets exactly one fresh lookup attempt', async t => {
   let lookups = 0;
@@ -19,17 +20,16 @@ test('visibility timeout gets exactly one fresh lookup attempt', async t => {
 });
 
 for (const operation of ['lookup', 'visibility', 'click', 'type'] as const) {
-  test(`${operation} waits once then checks the missing element immediately on retry`, async t => {
+  test(`${operation} aborts after the wait without retrying a missing element`, async t => {
     let clock = 0;
     let lookups = 0;
-    let retryChecks = 0;
+    let subsequentStep = false;
     let pauses = 0;
     t.mock.method(Date, 'now', () => clock);
     _setGlobal('browser', { pause: async () => { pauses++; clock += 250; } });
     _setGlobal('$', async () => {
       const lookup = ++lookups;
       const check = async () => {
-        if (lookup > (operation === 'type' ? 0 : 1)) retryChecks++;
         return operation === 'type' && lookup === 1;
       };
       return { isDisplayed: check, isExisting: check, click: async () => {} };
@@ -39,11 +39,14 @@ for (const operation of ['lookup', 'visibility', 'click', 'type'] as const) {
       : operation === 'visibility' ? () => session.waitForVisibleElement('~missing', 500)
         : operation === 'click' ? () => session.clickElement('~missing')
           : () => session.typeIntoElement('~missing', 'value');
-    await assert.rejects(action, /Element was not (found|visible)/);
+    await assert.rejects(async () => {
+      await action();
+      subsequentStep = true;
+    }, RequiredMobileElementError);
     assert.equal(clock, operation === 'lookup' || operation === 'visibility' ? 500 : session.waitTimeout);
     assert.equal(pauses, clock / 250);
-    assert.equal(retryChecks, 1);
-    assert.equal(lookups, operation === 'type' ? 1 : 1);
+    assert.equal(subsequentStep, false);
+    assert.equal(lookups, operation === 'type' ? 2 : 1);
   });
 }
 
@@ -93,8 +96,44 @@ for (const platform of ['Android', 'iOS'] as const) {
           : failure === 'type' ? ['visible', 'click', 'visible', 'type', 'visible', 'type']
             : ['visible', 'click', 'visible', 'click'];
       assert.deepEqual(calls, [...expected, ...(recovers ? ['subsequent-step'] : [])]);
-      assert.equal(failures, 1);
+      assert.equal(failures, 2);
     });
     }
+
+    test('optional visibility remains false and a later independent operation can succeed', async () => {
+      _setGlobal('$', async () => ({ isDisplayed: async () => false }));
+      const session = new MobileSession('Android');
+      assert.equal(await session.isElementVisible('~optional', 0), false);
+      await assert.rejects(session.waitForVisibleElement('~required', 0), RequiredMobileElementError);
+      _setGlobal('$', async () => ({ isDisplayed: async () => true }));
+      await session.waitForVisibleElement('~next-test', 0);
+    });
+
+    test('nested retry wrappers preserve the missing-element error without retrying', async () => {
+      const session = new MobileSession('iOS');
+      const missing = new RequiredMobileElementError('required element missing');
+      let attempts = 0;
+      await assert.rejects(session.retryOnce('outer assertion', () =>
+        session.retryOnce('inner lookup', async () => {
+          attempts++;
+          throw missing;
+        })), error => error === missing);
+      assert.equal(attempts, 1);
+    });
+
+    test('scroll exhaustion aborts without repeating the scroll sequence', async t => {
+      class Screen extends BaseScreen {
+        constructor(session: MobileSession) { super(session); }
+        run() { return this.scrollAndClick('~missing', '~missing', 2); }
+      }
+      const session = new MobileSession('Android');
+      let lookups = 0;
+      let swipes = 0;
+      t.mock.method(session, 'findVisibleScrollTarget', async () => { lookups++; return undefined; });
+      t.mock.method(session, 'scrollUp', async () => { swipes++; });
+      await assert.rejects(new Screen(session).run(), RequiredMobileElementError);
+      assert.equal(lookups, 3);
+      assert.equal(swipes, 2);
+    });
   }
 }
