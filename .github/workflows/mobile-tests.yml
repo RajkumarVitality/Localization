@@ -3,20 +3,49 @@ name: Mobile Test Suites
 on:
   workflow_dispatch:
     inputs:
-      suite:
-        description: Test suite
+      tenant:
+        description: Tenant number
+        required: true
         type: choice
         options:
-          - smoke
-          - regression
-        default: smoke
+          - "9998"
+          - "34"
+        default: "9998"
+
+      environment:
+        description: "9998: ca-test/ca-dev/mdev-9998 | 34: mdev/uat"
+        required: true
+        type: choice
+        options:
+          - ca-test
+          - ca-dev
+          - mdev-9998
+          - mdev
+          - uat
+        default: ca-test
+
       platform:
         description: Mobile platform
+        required: true
         type: choice
         options:
           - Android
           - iOS
         default: Android
+
+      suite:
+        description: Test suite
+        required: true
+        type: choice
+        options:
+          - smoke
+          - regression
+        default: smoke
+
+      app_id:
+        description: "Uploaded app ID: lt://APP..."
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -28,7 +57,7 @@ concurrency:
 jobs:
   mobile-tests:
     runs-on: macos-latest
-    # For your VPN-connected Mac, replace the line above with:
+    # For VPN/private backend access, use:
     # runs-on: [self-hosted, macOS, mobile-tests]
 
     timeout-minutes: 180
@@ -36,9 +65,12 @@ jobs:
 
     env:
       CI: "true"
+      TENANT_NUMBER: ${{ inputs.tenant }}
+      VG_ENVIRONMENT: ${{ inputs.environment }}
       PLATFORM: ${{ inputs.platform }}
       SUITE: ${{ inputs.suite }}
-      VG_ENVIRONMENT: mdev
+      appId: ${{ inputs.app_id }}
+      LT_SCENARIO: loginAndLogout
       LT_OPEN_LIVE_SESSION: "false"
 
     steps:
@@ -54,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Configure and run suite
+      - name: Configure, validate, and run suite
         shell: bash
         env:
           CLOUD_CONFIG: ${{ secrets.LT_PROPERTIES }}
@@ -64,18 +96,63 @@ jobs:
           umask 077
           trap 'rm -f lambdatest.properties user-creation.properties' EXIT
 
-          test -n "$CLOUD_CONFIG"
-          test -n "$USER_CONFIG"
+          if [[ -z "$CLOUD_CONFIG" || -z "$USER_CONFIG" ]]; then
+            echo "Configure LT_PROPERTIES and USER_CREATION_PROPERTIES secrets."
+            exit 1
+          fi
 
           printf '%s\n' "$CLOUD_CONFIG" > lambdatest.properties
           printf '%s\n' "$USER_CONFIG" > user-creation.properties
+          unset CLOUD_CONFIG USER_CONFIG
+
+          node --import tsx --input-type=module <<'NODE'
+          import {
+            userCreationProfilePrefix,
+            userCreationSetting
+          } from './src/config/userCreation.ts';
+
+          const tenant = process.env.TENANT_NUMBER;
+          const profile = process.env.VG_ENVIRONMENT;
+
+          const allowed = {
+            '9998': ['ca-test', 'ca-dev', 'mdev-9998'],
+            '34': ['mdev', 'uat']
+          };
+
+          if (!Object.hasOwn(allowed, tenant) ||
+              !allowed[tenant].includes(profile)) {
+            throw new Error('Invalid tenant/environment combination.');
+          }
+
+          const tenantKey =
+            `${userCreationProfilePrefix(profile)}TENANT_NUMBER`;
+
+          if (userCreationSetting(tenantKey) !== tenant) {
+            throw new Error(
+              `Configure ${tenantKey}=${tenant} in USER_CREATION_PROPERTIES.`
+            );
+          }
+
+          if (!['Android', 'iOS'].includes(process.env.PLATFORM)) {
+            throw new Error('Unsupported mobile platform.');
+          }
+
+          if (!/^lt:\/\/APP[A-Za-z0-9_-]+$/.test(process.env.appId ?? '')) {
+            throw new Error('App ID must use lt://APP... format.');
+          }
+
+          console.log(
+            `Validated tenant ${tenant}, environment ${profile}, ` +
+            `platform ${process.env.PLATFORM}.`
+          );
+          NODE
 
           case "$SUITE" in
             smoke|regression)
-              npm test -- --suite "$SUITE" --maxInstances 1
+              npm test -- --suite "$SUITE" --maxInstances 2
               ;;
             *)
-              echo "Unsupported suite"
+              echo "Unsupported suite."
               exit 1
               ;;
           esac
