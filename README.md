@@ -54,6 +54,61 @@ This installs reusable AI instructions, not a LambdaTest API/MCP connection
 or a Copilot SDK generator service. It does not upload apps, provision members,
 or launch paid device sessions.
 
+## Mobile framework MCP server and agent
+
+For architecture, tool contracts, client setup, troubleshooting, and PoC
+limitations, see the [MCP agent technical documentation](./docs/mcp-agent-technical-documentation.md).
+
+The local **mobile-framework** MCP server exposes five read-only tools:
+`framework_overview`, `list_scenarios`, `list_framework_files`,
+`read_framework_file`, and `plan_mobile_run`. It explains the architecture,
+discovers registered scenarios and pack membership, reads approved source and
+tenant selector files with line numbers, and produces run commands and warnings.
+It does not generate code itself: the Copilot agent uses this context to edit
+the framework with the editor's tools.
+
+After installing dependencies, in VS Code:
+
+1. Run **MCP: List Servers**, select **mobile-framework**, and start/trust the
+   workspace server configured in [`.vscode/mcp.json`](./.vscode/mcp.json).
+2. Select **Mobile Framework MCP Agent** in Copilot Chat. Its definition is in
+   [`.github/agents/mobile-framework-mcp.agent.md`](./.github/agents/mobile-framework-mcp.agent.md).
+3. Ask: "Explain the framework, then create a regression test for logging out
+   and back in on Android. Reuse existing selectors and provisioned accounts.
+   Run local validation only; do not launch LambdaTest."
+
+This requires a VS Code/Copilot version supporting workspace MCP servers and
+custom agents. For JetBrains or another MCP client, configure a stdio server with command
+`node`, arguments `--import`, `tsx`, `src/mcp/server.ts`, and working directory
+set to this repository's absolute path. No MCP API key or HTTP port is needed.
+`npm run --silent mcp:start` also starts the stdio server; it waits for an MCP
+client, not interactive commands. Standard output is reserved for MCP messages.
+
+The server does not load credential settings, return environment values, read
+local credential files, member fixtures or reports, write files, execute shell
+commands, provision accounts, or contact the cloud. Source reads use an explicit
+catalog, reject symlinks, and are limited to 200 lines per request and 256 KiB
+per file. Approved source is visible to the connected AI client; never put
+secrets in source files or connect an untrusted client.
+
+`plan_mobile_run` accepts `target` (`scenario` or `suite`), a registered `name`,
+and `platform` (`Android` or `iOS`). For example:
+
+```json
+{"target":"suite","name":"smoke","platform":"Android"}
+```
+
+Plans are not executed. The agent must obtain explicit approval before running
+cloud sessions or provisioning/backend writes through its execution tools.
+Interactive commands still prompt for tenant, environment, platform, and app ID;
+non-interactive runs need the settings documented below.
+Restart the MCP server after changing the scenario registry so discovery and
+plans use the updated imports. If the server is unavailable, the agent reports
+that and can inspect the repository directly.
+
+Use `npm run test:mcp` for local protocol, discovery, file-access, and run-plan
+checks; these do not open devices or provision members.
+
 ## Prerequisites
 
 - Node.js 20 or later and npm

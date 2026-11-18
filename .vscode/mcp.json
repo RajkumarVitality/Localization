@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "mobile-framework": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "--import",
+        "tsx",
+        "${workspaceFolder}/src/mcp/server.ts"
+      ],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}

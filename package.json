@@ -15,11 +15,14 @@
     "test:mha-high-risk": "cross-env LT_SCENARIO=mha-high-risk tsx scripts/run-mobile-tests.ts",
     "test:screening": "cross-env LT_SCENARIO=screening tsx scripts/run-mobile-tests.ts",
     "test:unit": "node --import tsx --test tests/helpers/*.test.ts",
+    "test:mcp": "node --import tsx --test tests/helpers/framework-mcp.test.ts",
+    "mcp:start": "node --import tsx src/mcp/server.ts",
     "typecheck": "tsc --noEmit",
     "report:generate": "tsx scripts/serve-allure-report.ts",
     "report:open": "tsx scripts/serve-allure-report.ts"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.30",
@@ -33,7 +36,8 @@
     "cross-env": "^7.0.3",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
-    "webdriverio": "^9.15.0"
+    "webdriverio": "^9.15.0",
+    "zod": "^4.6.7"
   },
   "overrides": {
     "basic-ftp": "6.2.1",
