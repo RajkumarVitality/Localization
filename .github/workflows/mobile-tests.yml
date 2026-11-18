@@ -1,0 +1,86 @@
+name: Mobile Test Suites
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Test suite
+        type: choice
+        options:
+          - smoke
+          - regression
+        default: smoke
+      platform:
+        description: Mobile platform
+        type: choice
+        options:
+          - Android
+          - iOS
+        default: Android
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-tests
+  cancel-in-progress: false
+
+jobs:
+  mobile-tests:
+    runs-on: macos-latest
+    # For your VPN-connected Mac, replace the line above with:
+    # runs-on: [self-hosted, macOS, mobile-tests]
+
+    timeout-minutes: 180
+    environment: mobile-tests
+
+    env:
+      CI: "true"
+      PLATFORM: ${{ inputs.platform }}
+      SUITE: ${{ inputs.suite }}
+      VG_ENVIRONMENT: mdev
+      LT_OPEN_LIVE_SESSION: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure and run suite
+        shell: bash
+        env:
+          CLOUD_CONFIG: ${{ secrets.LT_PROPERTIES }}
+          USER_CONFIG: ${{ secrets.USER_CREATION_PROPERTIES }}
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -f lambdatest.properties user-creation.properties' EXIT
+
+          test -n "$CLOUD_CONFIG"
+          test -n "$USER_CONFIG"
+
+          printf '%s\n' "$CLOUD_CONFIG" > lambdatest.properties
+          printf '%s\n' "$USER_CONFIG" > user-creation.properties
+
+          case "$SUITE" in
+            smoke|regression)
+              npm test -- --suite "$SUITE" --maxInstances 1
+              ;;
+            *)
+              echo "Unsupported suite"
+              exit 1
+              ;;
+          esac
+
+      - name: Remove credential files
+        if: always()
+        shell: bash
+        run: rm -f lambdatest.properties user-creation.properties
