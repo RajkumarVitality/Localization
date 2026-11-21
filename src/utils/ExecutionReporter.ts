@@ -1,6 +1,7 @@
 import { browser } from '@wdio/globals';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import {
   artifactTimestamp,
   getArtifactsRoot,
@@ -10,6 +11,7 @@ import {
 interface ReportSink {
   addStep(message: string): Promise<void>;
   addAttachment(name: string, content: string | Buffer, type: string): Promise<void>;
+  timeStep?<T>(name: string, action: () => Promise<T>): Promise<T>;
 }
 
 export class ExecutionReporter {
@@ -38,15 +40,34 @@ export class ExecutionReporter {
     if (this.logPath) {
       const artifactDirectory = this.artifactDirectory;
       const logPath = this.logPath;
+      const reportSink = this.reportSink;
+      if (reportSink) {
+        void reportSink.addStep(message).catch(error => {
+          console.error(`Unable to record report step: ${String(error)}`);
+        });
+      }
       this.writeQueue = this.writeQueue
         .then(async () => {
           await mkdir(artifactDirectory!, { recursive: true });
           await appendFile(logPath!, `${line}\n`, 'utf8');
-          await this.reportSink?.addStep(message);
         })
         .catch(error => {
           console.error(`Unable to record execution log or report step: ${String(error)}`);
         });
+    }
+  }
+
+  async timeStep<T>(name: string, action: () => Promise<T>): Promise<T> {
+    if (!this.reportSink?.timeStep) return action();
+    const started = performance.now();
+    let status = 'PASSED';
+    try {
+      return await this.reportSink.timeStep(name, action);
+    } catch (error) {
+      status = 'FAILED';
+      throw error;
+    } finally {
+      this.log(`Timing: ${name} | ${status} | ${(performance.now() - started).toFixed(1)} ms`);
     }
   }
 

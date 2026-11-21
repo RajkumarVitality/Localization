@@ -11,6 +11,14 @@ The original test failure, assertions, screenshots, and status are preserved.
 Analysis is advisory and does not retry the test, create defects, or change
 Allure's failed/broken determination.
 
+Independently of Ollama, failed tests check the captured Android page source
+for the visible "Unsafe device detected" dialog and its security message.
+When both are present, an observed failure reason is written to the execution
+log and added to Allure as a step and **Observed failure reason** attachment.
+The reason the device was flagged remains unknown; this does not bypass the
+security check or change the test outcome. A missing page source is reported
+explicitly. Existing reports are not rewritten.
+
 ## Local setup
 
 Install Ollama separately using your organization's approved installation

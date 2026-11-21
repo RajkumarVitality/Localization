@@ -17,15 +17,31 @@ import { executionReporter } from './src/utils/ExecutionReporter.js';
 import { closeLiveSessionTab, openInDefaultBrowser } from './src/utils/browserLauncher.js';
 import type { MobilePlatform } from './src/config/mobileSessionInit.js';
 import { browser } from '@wdio/globals';
-import { addAttachment, addLabel, addLink, addStep } from '@wdio/allure-reporter';
+import { addAttachment, addLabel, addLink, addStep, step } from '@wdio/allure-reporter';
 import { executionTimeouts } from './src/config/timeoutsHandling.js';
 import { resolveScenario, scenarios, suites } from './src/config/runner.js';
-import { initializeTestAccountsForSpecs, testAccounts } from './tests/helpers/user_helpers/TestUser.js';
+import { getProvisioningTimings, initializeTestAccountsForSpecs, testAccounts } from './tests/helpers/user_helpers/TestUser.js';
 import { configuredTenantNumber, mobileEnvironments, userCreationProfilePrefix, userCreationSetting } from './src/config/userCreation.js';
 import { reportDynatraceSessions } from './src/utils/dynatraceSessions.js';
 import { captureSessionDeviceDetails, sessionTimeLogLine, sessionDeviceDetails, sessionDeviceLogLines } from './src/utils/sessionDeviceDetails.js';
 import { readLambdaTestSessionDeviceName } from './src/utils/lambdatestSession.js';
 import { reportFailureAnalysis } from './src/utils/failureAnalysis.js';
+import { reportObservedFailure } from './src/utils/observedFailure.js';
+import { performance } from 'node:perf_hooks';
+import { instrumentScreen } from './src/utils/screenTimings.js';
+import { ActivityScreen } from './src/pages/ActivityScreen.js';
+import { HealthScreen } from './src/pages/HealthScreen.js';
+import { HealthyLivingScreen } from './src/pages/HealthyLivingScreen.js';
+import { HomeScreen } from './src/pages/HomeScreen.js';
+import { LoginScreen } from './src/pages/LoginScreen.js';
+import { MHALandingScreen } from './src/pages/MHALandingScreen.js';
+import { MHAQuestionsScreen } from './src/pages/MHAQuestionsScreen.js';
+import { MHASectionScreen } from './src/pages/MHASectionScreen.js';
+import { MHASuccessfulCompleteScreen } from './src/pages/MHASuccessfulCompleteScreen.js';
+import { ProfileScreen } from './src/pages/ProfileScreen.js';
+import { ScreeningVaccinationScreen } from './src/pages/ScreeningVaccinationScreen.js';
+import { SettingsScreen } from './src/pages/SettingsScreen.js';
+import { WelcomeScreen } from './src/pages/WelcomeScreen.js';
 
 const platform: MobilePlatform = selectedPlatform();
 const scenario = resolveScenario(settingOr('LT_SCENARIO', 'loginAndLogout'), platform);
@@ -35,11 +51,22 @@ const timeouts = executionTimeouts();
 let liveSessionUrl: string | undefined;
 let sessionStartTime: Date;
 let sessionCreatedAt: Date;
+let provisioningDuration: number;
+let sessionStartTick: number;
+let sessionDuration: number;
+let deviceExecutionStart: number;
+
+for (const screen of [
+  ActivityScreen, HealthScreen, HealthyLivingScreen, HomeScreen, LoginScreen,
+  MHALandingScreen, MHAQuestionsScreen, MHASectionScreen, MHASuccessfulCompleteScreen,
+  ProfileScreen, ScreeningVaccinationScreen, SettingsScreen, WelcomeScreen
+]) instrumentScreen(screen.prototype, screen.name);
 
 export const config: WebdriverIO.Config = {
   runner: 'local',
   specs: [`./tests/${testScenario.file}`],
   suites,
+  bail: 0,
   maxInstances: 1,
   capabilities: [buildCapabilities(platform, scenario, testScenario.name)],
   hostname: endpoint.hostname,
@@ -65,17 +92,23 @@ export const config: WebdriverIO.Config = {
     retries: 0
   },
   async beforeSession(_config, capabilities, specs) {
+    const provisioningStart = performance.now();
     try {
       setSessionNameFromSpecs(capabilities, specs);
       await initializeTestAccountsForSpecs(specs);
+      provisioningDuration = performance.now() - provisioningStart;
       sessionStartTime = new Date();
+      sessionStartTick = performance.now();
     } catch (error) {
+      console.error(`[Timing] Test data creation using API | FAILED | ${(performance.now() - provisioningStart).toFixed(1)} ms`);
       console.error('[UserProvisioning] Pre-session setup failed; stopping worker without opening a mobile session.', error);
       // WebdriverIO logs and swallows hook errors; terminate only this worker.
       process.exit(1);
     }
   },
   async before() {
+    sessionDuration = performance.now() - sessionStartTick;
+    deviceExecutionStart = performance.now();
     sessionCreatedAt = new Date();
     console.log(`[MobileSession] ${sessionTimeLogLine(sessionCreatedAt, 'Create')}`);
     console.log(`[MobileSession] App ID: ${appIdFor(platform, scenario)}`);
@@ -99,8 +132,13 @@ export const config: WebdriverIO.Config = {
   async beforeTest(test) {
     addLabel('environment', (userCreationSetting('VG_ENVIRONMENT') ?? 'mdev').toLowerCase());
     addLabel('tenant', configuredTenantNumber());
-    executionReporter.startTest(test.parent, test.title, { addAttachment, addStep });
+    executionReporter.startTest(test.parent, test.title, {
+      addAttachment, addStep, timeStep: (name, action) => step(name, action)
+    });
     executionReporter.log('Starting test execution.');
+    executionReporter.log(`Test data creation using API | ${provisioningDuration.toFixed(1)} ms`);
+    for (const timing of getProvisioningTimings()) executionReporter.log(timing);
+    executionReporter.log(`LambdaTest device session creation | ${sessionDuration.toFixed(1)} ms`);
     executionReporter.log(sessionTimeLogLine(sessionCreatedAt, 'Create'));
     executionReporter.log(`App ID: ${appIdFor(platform, scenario)}`);
     if (!sessionDeviceDetails) throw new Error('Session device details were not captured after session initialization.');
@@ -137,10 +175,12 @@ export const config: WebdriverIO.Config = {
   },
   afterTest: async (_test, _context, result) => {
     const testEndTime = new Date();
+    executionReporter.log(`Execution on LambdaTest device (session created to test end) | ${(performance.now() - deviceExecutionStart).toFixed(1)} ms`);
     if (result.error) {
       executionReporter.log(`Test failed: ${result.error.message}`);
       await executionReporter.captureScreenshot('listener-failure');
-      await executionReporter.capturePageSource('listener-failure');
+      const pageSourcePath = await executionReporter.capturePageSource('listener-failure');
+      await reportObservedFailure(pageSourcePath, executionReporter);
       await reportFailureAnalysis(
         result.error.stack ?? result.error.message,
         {

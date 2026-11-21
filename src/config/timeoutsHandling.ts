@@ -9,7 +9,7 @@ export function timeoutMilliseconds(key: string, defaultSeconds: number): number
 }
 
 export function executionTimeouts(): { element: number; test: number } {
-  const element = timeoutMilliseconds('LT_WAIT_SECONDS', 300);
+  const element = timeoutMilliseconds('LT_WAIT_SECONDS', 10);
   const test = timeoutMilliseconds('LT_TEST_TIMEOUT_SECONDS', 900);
   if (test <= element) {
     throw new Error('LT_TEST_TIMEOUT_SECONDS must be greater than LT_WAIT_SECONDS so element waits can report their errors.');

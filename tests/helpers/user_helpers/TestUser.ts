@@ -26,6 +26,11 @@ export interface TestAccountDetails {
 }
 
 let accountDetails: Readonly<TestAccountDetails> | undefined;
+let provisioningTimings: string[] = [];
+
+export function getProvisioningTimings(): readonly string[] {
+  return [...provisioningTimings];
+}
 
 export const testAccounts = {
   get member(): string {
@@ -64,9 +69,12 @@ async function provisioningStep<T>(
   try {
     const result = await action();
     const status = result instanceof Response ? ` | HTTP ${result.status}` : '';
-    console.log(`${context} | SUCCESS${status} | ${Date.now() - started} ms`);
+    const elapsed = Date.now() - started;
+    provisioningTimings.push(`API: ${name} | SUCCESS${status} | ${elapsed} ms`);
+    console.log(`${context} | SUCCESS${status} | ${elapsed} ms`);
     return result;
   } catch (error) {
+    provisioningTimings.push(`API: ${name} | FAILED | ${Date.now() - started} ms`);
     console.error(
       `${context} | FAILED | ${Date.now() - started} ms | ${error instanceof Error ? error.message : String(error)}`
     );
@@ -76,6 +84,7 @@ async function provisioningStep<T>(
 
 export async function initializeTestAccountsForSpecs(specs: string[]): Promise<void> {
   member = undefined;
+  provisioningTimings = [];
   if (specs.length !== 1) {
     throw new Error('Member provisioning requires exactly one spec per mobile worker.');
   }

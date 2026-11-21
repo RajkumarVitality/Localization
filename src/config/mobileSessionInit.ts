@@ -115,8 +115,8 @@ export function cloudEndpoint(): URL {
 }
 
 export function deviceDefaults(platform: MobilePlatform, scenario = 'android-login'): { device: string; version: string } {
-  const defaultDevice = platform === 'iOS' ? 'iPhone .*' : 'Galaxy S.*';
-  const defaultVersion = platform === 'iOS' || scenario !== 'android-login' ? '.*' : '14';
+  const defaultDevice = platform === 'iOS' ? 'iPhone .*' : '.*';
+  const defaultVersion = platform === 'iOS' || scenario !== 'android-login' ? '.*' : '.*';
 
   return {
     device: settingOr('device', settingOr('LT_DEVICE', defaultDevice)),

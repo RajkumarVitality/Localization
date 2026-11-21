@@ -242,7 +242,7 @@ Optional settings:
   If `LT_TEST_NAME` is set, it is used as a prefix followed by the spec name,
   so parallel pack sessions remain distinguishable. Build names are unchanged.
 - `LT_ARTIFACTS_DIR` (defaults to `target/test-artifacts`)
-- `LT_WAIT_SECONDS` (defaults to `300`)
+- `LT_WAIT_SECONDS` (defaults to `10`; override for slower devices)
 - `LT_TEST_TIMEOUT_SECONDS` controls the whole test independently of element
   waits. Every scenario defaults to `900` seconds (15 minutes), regardless of
   platform. It must exceed `LT_WAIT_SECONDS`.
@@ -258,9 +258,10 @@ Optional settings:
 Missing required elements abort the current test when the configured
 existence/visibility wait expires, without another lookup attempt. Exhausting
 the configured scroll limit also aborts without repeating the scroll sequence.
-Optional visibility checks can still return false. Other operation failures
-(such as stale-element clicks or text assertions) retain their existing single
-retry; only the failed operation is repeated, not the entire test case.
+Optional visibility checks can still return false. Failed assertions abort the
+current test without retrying. Other operation failures (such as stale-element
+clicks) retain their existing single retry; only the failed operation is
+repeated, not the entire test case.
 Failure evidence, reporting, and session cleanup still run after the test
 body aborts. Other scenarios in the pack are not cancelled.
 

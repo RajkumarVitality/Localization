@@ -166,7 +166,7 @@ consumed by [`wdio.conf.ts`](../wdio.conf.ts).
 1. **Resolve platform and scenario.** The platform is validated; the selected
    scenario is resolved from `LT_SCENARIO` with a default of `loginAndLogout`.
 2. **Resolve endpoint and timeouts.** The configured grid URL is normalized
-   into a WebDriver endpoint. `LT_WAIT_SECONDS` defaults to 300 seconds and
+   into a WebDriver endpoint. `LT_WAIT_SECONDS` defaults to 10 seconds and
    `LT_TEST_TIMEOUT_SECONDS` defaults to 900 seconds. Both must be positive,
    within the supported timer range, and the whole-test timeout must exceed
    the element-wait timeout.
@@ -486,16 +486,16 @@ low-level selectors.
 
 `MobileSession` contains shared WebdriverIO operations and W3C touch actions.
 Required element existence/visibility waits throw `RequiredMobileElementError`
-on expiration. `retryOnce` logs and propagates that error without retrying,
-including through nested assertion wrappers. Exhausting a scroll search uses
-the same error and does not repeat the search. Optional visibility probes still
+on expiration. `retryOnce` logs and propagates that error or a Node assertion
+failure without retrying, including through nested wrappers. Exhausting a
+scroll search uses the same error and does not repeat the search. Optional visibility probes still
 return false. Other operation failures retain their existing one retry, with
 an immediate lookup rather than another full wait. The current test stops,
 but reporting/cleanup and other tests in the suite remain enabled.
 
 | Setting | Default | Scope |
 | --- | --- | --- |
-| `LT_WAIT_SECONDS` | 300 seconds | Shared element wait and WebdriverIO wait configuration. |
+| `LT_WAIT_SECONDS` | 10 seconds | Shared element wait and WebdriverIO wait configuration; configurable for slower devices. |
 | `LT_TEST_TIMEOUT_SECONDS` | 900 seconds | Mocha test timeout; must exceed the element wait. |
 | `connectionRetryTimeout` | 180,000 ms | WebdriverIO connection handling. |
 | `connectionRetryCount` | 2 | WebdriverIO connection retries, separate from UI operation retry. |

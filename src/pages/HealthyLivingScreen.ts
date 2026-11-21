@@ -16,7 +16,7 @@ export class HealthyLivingScreen extends BaseScreen {
   }
 
   async openLogin(): Promise<LoginScreen> {
-    await this.click(mobileElements.HealthyLivingScreen.loginButton.android, mobileElements.HealthyLivingScreen.loginButton.ios);
+    await this.scrollAndClick(mobileElements.HealthyLivingScreen.loginButton.android, mobileElements.HealthyLivingScreen.loginButton.ios, 10000);
     return new LoginScreen(this.session);
   }
 }

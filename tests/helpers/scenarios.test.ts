@@ -53,14 +53,14 @@ test('every scenario and platform uses shared execution timeouts', () => {
       process.env.LT_SCENARIO = scenario;
       const defaults = executionTimeouts();
       assert.equal(defaults.test, 900_000);
-      assert.equal(defaults.element, 300_000);
+      assert.equal(defaults.element, 10_000);
       assert.equal(new MobileSession('Android').waitTimeout, defaults.element);
       assert.equal(new MobileSession('iOS').waitTimeout, defaults.element);
     }
-    process.env.LT_WAIT_SECONDS = '10';
-    process.env.LT_TEST_TIMEOUT_SECONDS = '20';
-    assert.equal(new MobileSession('Android').waitTimeout, 10_000);
-    assert.equal(new MobileSession('iOS').waitTimeout, 10_000);
+    process.env.LT_WAIT_SECONDS = '20';
+    process.env.LT_TEST_TIMEOUT_SECONDS = '30';
+    assert.equal(new MobileSession('Android').waitTimeout, 20_000);
+    assert.equal(new MobileSession('iOS').waitTimeout, 20_000);
   } finally {
     if (previousScenario === undefined) delete process.env.LT_SCENARIO;
     else process.env.LT_SCENARIO = previousScenario;

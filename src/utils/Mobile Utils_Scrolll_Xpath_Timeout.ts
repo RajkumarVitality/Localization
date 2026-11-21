@@ -1,4 +1,5 @@
 import { browser, $, $$ } from '@wdio/globals';
+import { AssertionError } from 'node:assert';
 import type { ChainablePromiseElement } from 'webdriverio';
 import { settingOr, type MobilePlatform } from '../config/mobileSessionInit.js';
 import { executionTimeouts } from '../config/timeoutsHandling.js';
@@ -25,7 +26,7 @@ export class MobileSession {
     try {
       return await operation(false);
     } catch (error) {
-      if (error instanceof RequiredMobileElementError) {
+      if (error instanceof RequiredMobileElementError || error instanceof AssertionError) {
         executionReporter.log(`${description} failed; aborting current test without retry: ${error.message}`);
         throw error;
       }
