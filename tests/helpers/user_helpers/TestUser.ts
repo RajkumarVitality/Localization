@@ -11,7 +11,7 @@ import {
   registerUser
 } from '../../../src/config/API-to-Create-New-User.js';
 import { requiredSetting } from '../../../src/config/mobileSessionInit.js';
-import { mobileEnvironments, requiredUserCreationSetting, userCreationProfilePrefix, userCreationSetting } from '../../../src/config/userCreation.js';
+import { configuredTenantNumber, mobileEnvironments, requiredUserCreationSetting, userCreationProfilePrefix, userCreationSetting } from '../../../src/config/userCreation.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { scenarios } from '../../../src/config/runner.js';
@@ -94,6 +94,10 @@ export async function initializeTestAccountsForSpecs(specs: string[]): Promise<v
     throw new Error(`No provisioning policy is registered for spec "${path.basename(specPath)}".`);
   }
   if (!definition.provisionMember) return;
+  if (definition.file === scenarios['reset-password'].file) {
+    if (configuredTenantNumber() !== '9998') throw new Error('Reset password requires tenant 9998 locators.');
+    requiredUserCreationSetting('MAILINATOR_API_TOKEN');
+  }
   if (definition.file === scenarios.lockout.file) {
     const incorrectPassword = requiredSetting('INCORRECT_APP_PASSWORD', 'APP_INCORRECT_PASSWORD');
     if (incorrectPassword === requiredSetting('APP_PASSWORD')) {

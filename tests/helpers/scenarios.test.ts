@@ -22,6 +22,7 @@ test('login/logout selects the same cross-platform spec on Android and iOS', () 
 });
 
 test('high-risk MHA uses the runtime platform without a scenario override', () => {
+  assert.equal(scenarios['mha-high-risk'].serviceNowTestId, 'TEMT0049663');
   const previousPlatform = process.env.PLATFORM;
   try {
     for (const platform of ['Android', 'iOS'] as const) {

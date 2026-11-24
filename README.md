@@ -462,6 +462,26 @@ risk, and screening/vaccination. `src/config/runner.ts` contains the
 scenario-to-spec registry and smoke/regression suite definitions. Common flows stay in helpers, while
 screen-specific locators and interactions stay in page objects.
 
+### Mobile gestures
+
+`MobileSession` provides reusable W3C touch gestures for Android and iOS cloud
+devices, without changing the existing `scrollUp()` behavior:
+
+```typescript
+await session.swipe('left');                  // finger moves left
+await session.scroll('down');                // reveal content below
+await session.scrollToElement('~target', 'down', 5);
+await session.longPress('~target', 1000);    // duration in milliseconds
+await session.pinch('~image', 'in');         // pinch in (zoom out)
+await session.pinch('~image', 'out');        // spread fingers (zoom in)
+```
+
+Swipe and scroll accept `up`, `down`, `left`, or `right` and an optional
+duration. Scroll-to-element checks the viewport after each swipe and throws
+if the target is not found within the limit. Long press and pinch use the
+visible part of an element; pinch support depends on the app's control.
+Gestures require an active session and do not automatically retry on failure.
+
 Each test writes its execution log, screenshots, and (on failure) page source to
 a timestamped directory under `target/test-artifacts/`. Generated artifacts,
 legacy `test-output/` reports, and coverage output are ignored by Git. These
@@ -580,6 +600,53 @@ Results accumulate across runs. Each generated, filtered report is stored in
 not replaced. These directories are ignored by Git under `target/`. Reports
 can contain account and screen data; keep them private and restrict access to
 CI artifacts.
+
+## Mailinator message links
+
+### Reset-password scenario (tenant 9998)
+
+Run `npm run test:reset-password` and select tenant 9998, its environment,
+platform, and uploaded app. This opt-in scenario is not in the default suites.
+It uses the normal welcome/login navigation, asserts the forgot-password and
+mail screens using `T9998.yml`, requests a reset using the provisioned username
+including the selected profile's `LOGIN_PREFIX` (for example, `mdev--`),
+and polls for the first message's reset link for up to 90 seconds.
+A separate local Chrome WebDriver session submits `TestPassword123@` using
+`#password`, `#confirm_password`, and `#reset-button`, verifies the password-reset
+success message, then closes Chrome and logs in on the original mobile session.
+Chrome must be available on the runner; WebdriverIO manages its driver.
+The mobile session stays active throughout. No password or reset link is logged.
+This performs account creation and a real password change; run only against test environments.
+
+`src/config/mailinator.ts` provides one helper, `getMailinatorMessageLinks(userName)`.
+It removes the selected profile's login prefix (if present), splits the created
+email at `@`, requests the inbox on `vgnet.testinator.com`, extracts
+`$['msgs'][0]['id']`, then requests that message's `/links` endpoint.
+It opens the first HTTPS link whose path is exactly `/reset-password` in the host's
+default web browser and returns it as a string,
+including its original query parameters. A bare inbox name is also accepted.
+Set `MAILINATOR_API_TOKEN` in the ignored local `user-creation.properties` file
+or securely in the environment or CI secrets. A non-empty environment value
+overrides the file value. Do not commit the token. Restart the process after
+changing the properties file. Requests time out after 30 seconds. HTTP failures,
+empty inboxes, missing message IDs, missing reset-password links, and browser
+launch failures throw errors. This requires a desktop browser; do not call it
+on a headless CI runner.
+
+Call it after user creation when the expected email has arrived:
+
+```typescript
+import { getMailinatorMessageLinks } from './src/config/mailinator.js';
+import { testAccounts } from './tests/helpers/user_helpers/TestUser.js';
+
+const resetPasswordLink = await getMailinatorMessageLinks(testAccounts.member);
+```
+
+This helper does not run automatically during provisioning or poll for email delivery.
+Pass `false` as its second argument to retrieve the link without opening the
+default browser when a separate automated browser session will handle it.
+Keep the returned link in the calling test's variable; do not log or commit it,
+because it contains a password-reset confirmation code.
 
 ## Scrolling
 

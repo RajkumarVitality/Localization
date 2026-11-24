@@ -16,6 +16,18 @@ export async function loginWithUsername(username: string): Promise<{
   loginScreen: LoginScreen;
   homeScreen: HomeScreen;
 }> {
+  const result = await openLoginScreen();
+  await result.loginScreen.enterUsername(username);
+  executionReporter.log('Entered username.');
+  await result.loginScreen.dismissKeyboard();
+  return result;
+}
+
+export async function openLoginScreen(): Promise<{
+  session: MobileSession;
+  loginScreen: LoginScreen;
+  homeScreen: HomeScreen;
+}> {
   const session = new MobileSession(selectedPlatform());
   const welcomeScreen = new WelcomeScreen(session);
   await welcomeScreen.assertWelcomeMessage();
@@ -28,9 +40,6 @@ export async function loginWithUsername(username: string): Promise<{
   const loginScreen = await healthyLivingScreen.openLogin();
   executionReporter.log('Opened login screen.');
   await loginScreen.assertHelloVisible();
-  await loginScreen.enterUsername(username);
-  executionReporter.log('Entered username.');
-  await loginScreen.dismissKeyboard();
   return { session, loginScreen, homeScreen: new HomeScreen(session) };
 }
 

@@ -2,6 +2,7 @@ import { browser } from '@wdio/globals';
 import { MobileSession } from '../utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { BaseScreen } from './BaseScreen.js';
 import { expectedText, mobileElements } from './mobileElements.js';
+import { ForgotPasswordScreen } from './ForgotPasswordScreen.js';
 
 export class LoginScreen extends BaseScreen {
   constructor(session: MobileSession) {
@@ -36,6 +37,12 @@ export class LoginScreen extends BaseScreen {
 
   submit(): Promise<void> {
     return this.click(mobileElements.LoginScreen.submitButton.android, mobileElements.LoginScreen.submitButton.ios);
+  }
+
+  async openForgotPassword(): Promise<ForgotPasswordScreen> {
+    const locator = mobileElements.LoginScreen.forgotPassword;
+    await this.click(locator.android, locator.ios);
+    return new ForgotPasswordScreen(this.session);
   }
 
   async assertIncorrectPasswordMessage(): Promise<void> {

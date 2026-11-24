@@ -47,6 +47,34 @@ LoginScreen:
   dismissLockout:
     android: "//*[@resource-id='ctrl_btnok_001']"
     ios: "//*[@name='ctrl_btnok_001']"
+  forgotPassword:
+    android: "//*[@resource-id='ctrl_lnkforgotpass_001']"
+    ios: "//*[@name='ctrl_lnkforgotpass_001']"
+
+ForgotPasswordScreen:
+  Header:
+    android: "//*[@resource-id='txthdforgotpass_001']"
+    ios: "//*[@name='txthdforgotpass_001']"
+    expected: "Forgot your password?"
+  SubText:
+    android: "//*[@resource-id='txtbodyforgotpass_001']"
+    ios: "//*[@name='txtbodyforgotpass_001']"
+    expected: "No worries. Just enter the email you use for Vitality communications, and we’ll send your instructions to reset it."
+  EmailField:
+    android: "//*[@resource-id='txtlblemailaddress_001_text']"
+    ios: "//*[@name='txtemailaddress_001_text']"
+  ResetButton:
+    android: "//*[@resource-id='ctrl_btnresetpassword_001']"
+    ios: "//*[@name='ctrl_btnresetpassword_001']"
+
+YouHaveMailScreen:
+      Header:
+        android: "//*[@resource-id='login_txtyouvegotmail_001']"
+        ios: "//*[@name='txthdforgotpass_001']"
+        expected: "You’ve got mail"
+      NewPasswordButton:
+        android: "//*[@resource-id='btn_ctrl_btnLoginNewPw_001']"
+        ios: "//*[@name='btn_ctrl_btnLoginNewPw_001']"
 
 HomeScreen:
   greeting:

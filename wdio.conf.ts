@@ -42,6 +42,8 @@ import { ProfileScreen } from './src/pages/ProfileScreen.js';
 import { ScreeningVaccinationScreen } from './src/pages/ScreeningVaccinationScreen.js';
 import { SettingsScreen } from './src/pages/SettingsScreen.js';
 import { WelcomeScreen } from './src/pages/WelcomeScreen.js';
+import { ForgotPasswordScreen } from './src/pages/ForgotPasswordScreen.js';
+import { YouHaveMailScreen } from './src/pages/YouHaveMailScreen.js';
 
 const platform: MobilePlatform = selectedPlatform();
 const scenario = resolveScenario(settingOr('LT_SCENARIO', 'loginAndLogout'), platform);
@@ -59,7 +61,8 @@ let deviceExecutionStart: number;
 for (const screen of [
   ActivityScreen, HealthScreen, HealthyLivingScreen, HomeScreen, LoginScreen,
   MHALandingScreen, MHAQuestionsScreen, MHASectionScreen, MHASuccessfulCompleteScreen,
-  ProfileScreen, ScreeningVaccinationScreen, SettingsScreen, WelcomeScreen
+  ProfileScreen, ScreeningVaccinationScreen, SettingsScreen, WelcomeScreen,
+  ForgotPasswordScreen, YouHaveMailScreen
 ]) instrumentScreen(screen.prototype, screen.name);
 
 export const config: WebdriverIO.Config = {

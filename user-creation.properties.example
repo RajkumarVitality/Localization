@@ -2,6 +2,7 @@
 # Keep credentials in the ignored local file or CI environment variables.
 VG_ENVIRONMENT=mdev
 configUserAgent=VitalityActive/1.0.0.432/2.0 (iPhone 5,4; iOS 10.1)
+MAILINATOR_API_TOKEN=
 
 # enrolUser uses the API gateway base URL (including /api), bearer token and email domain.
 # createPartyCore requires HTTP 201; enrolUser requires HTTP 200.
