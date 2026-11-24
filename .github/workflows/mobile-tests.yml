@@ -83,8 +83,8 @@ jobs:
       - name: Validate configuration and run suite
         shell: bash
         env:
-          CLOUD_CONFIG: ${{ secrets.LT_PROPERTIES }}
-          USER_CONFIG: ${{ secrets.USER_CREATION_PROPERTIES }}
+          CLOUD_CONFIG: ${{ secrets.LT_ACCESS_KEY}}
+          USER_CONFIG: ${{ secrets.LT_USERNAME }}
         run: |
           set -euo pipefail
           umask 077
