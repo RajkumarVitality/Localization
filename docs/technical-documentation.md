@@ -97,6 +97,7 @@ The runner resolves `LT_SCENARIO` (default `loginAndLogout`) through
 | --- | --- | --- |
 | `loginAndLogout` | `tests/smoke/login-logout.spec.ts` | Yes |
 | `lockout` | `tests/regression/incorrect-password-lockout.spec.ts` | Yes |
+| `incorrect-password-once` | `tests/regression/incorrect-password-once.spec.ts` | Yes |
 | `mha-low-risk` | `tests/regression/mha-low-risk.spec.ts` | Yes |
 | `mha-high-risk` | `tests/smoke/mha-high-risk.spec.ts` | Yes |
 | `mha-unanswered` | `tests/regression/mha-unanswered.spec.ts` | Yes |

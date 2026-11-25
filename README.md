@@ -302,7 +302,7 @@ PLATFORM=iOS npm run test:regression
 | Pack | Specs |
 | --- | --- |
 | Smoke | `login-logout.spec.ts`, `mha-high-risk.spec.ts` |
-| Regression | `incorrect-password-lockout.spec.ts`, `mha-low-risk.spec.ts` |
+| Regression | `incorrect-password-lockout.spec.ts`, `incorrect-password-once.spec.ts`, `mha-low-risk.spec.ts`, `mha-privacy-cancel.spec.ts`, `mha-unanswered.spec.ts`, `mha-exit-partial.spec.ts`, `screening-vaccination.spec.ts`, `reset-password.spec.ts`, `login-logout.spec.ts`, `mha-high-risk.spec.ts` |
 
 These named WebdriverIO suites run only the listed specs, with a separate,
 freshly reset mobile session and a newly provisioned member for each spec.

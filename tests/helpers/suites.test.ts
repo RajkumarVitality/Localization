@@ -10,18 +10,14 @@ test('smoke pack selects only login/logout and high-risk MHA', () => {
   ]);
 });
 
-test('regression pack selects only password lockout and low-risk MHA', () => {
-  assert.deepEqual(suites.regression, [
-    './tests/regression/incorrect-password-lockout.spec.ts',
-    './tests/regression/mha-low-risk.spec.ts'
-  ]);
+test('regression pack includes the single-attempt and lockout password scenarios', () => {
+  assert.ok(suites.regression.includes('./tests/regression/incorrect-password-lockout.spec.ts'));
+  assert.ok(suites.regression.includes('./tests/regression/incorrect-password-once.spec.ts'));
 });
 
 test('packs contain distinct existing specs in separate worker entries', () => {
-  const files = Object.values(suites).flat();
-  assert.equal(new Set(files).size, 4);
   for (const pack of Object.values(suites)) {
-    assert.equal(pack.length, 2);
+    assert.equal(new Set(pack).size, pack.length);
     for (const file of pack) {
       assert.equal(typeof file, 'string');
       assert.ok(existsSync(new URL(`../../${file}`, import.meta.url)), file);

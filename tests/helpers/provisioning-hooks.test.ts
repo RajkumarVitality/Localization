@@ -12,8 +12,9 @@ import { ScreeningVaccinationScreen } from '../../src/pages/ScreeningVaccination
 import { MobileSession } from '../../src/utils/Mobile Utils_Scrolll_Xpath_Timeout.js';
 import { initializeTestAccountsForSpecs, testAccounts } from './user_helpers/TestUser.js';
 
-for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-password-lockout', 'mha-unanswered', 'mha-exit-partial', 'screening-vaccination']) {
-  const outcomes = file === 'incorrect-password-lockout'
+for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-password-lockout', 'incorrect-password-once', 'mha-unanswered', 'mha-exit-partial', 'screening-vaccination']) {
+  const isIncorrectPasswordScenario = file === 'incorrect-password-lockout' || file === 'incorrect-password-once';
+  const outcomes = isIncorrectPasswordScenario
     ? ['success', 'api-error', 'same-password']
     : file === 'screening-vaccination'
       ? ['success', 'success-ios', 'api-error']
@@ -87,7 +88,7 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
       let submits = 0;
       let incorrectMessages = 0;
       let lockoutMessages = 0;
-      if (file === 'incorrect-password-lockout' || file === 'screening-vaccination') {
+      if (isIncorrectPasswordScenario || file === 'screening-vaccination') {
         const session = new MobileSession('Android');
         const healthyLiving = new HealthyLivingScreen(session);
         const loginScreen = new LoginScreen(session);
@@ -174,7 +175,7 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
           bodiesRun++;
           assert.equal(testAccounts.member, `mdev--${email}`);
           assert.equal(fetchMock.mock.callCount(), 8);
-          if (file === 'incorrect-password-lockout' || file === 'screening-vaccination') {
+          if (isIncorrectPasswordScenario || file === 'screening-vaccination') {
             assert.ok(originalBody);
             assert.ok(mobileTest.ctx);
             await originalBody.call(mobileTest.ctx, error => {
@@ -196,12 +197,12 @@ for (const file of ['login-logout', 'mha-low-risk', 'mha-high-risk', 'incorrect-
         assert.deepEqual(passwords, ['test-password']);
         assert.equal(submits, 1);
       }
-      if (file === 'incorrect-password-lockout' && succeeds) {
+      if (isIncorrectPasswordScenario && succeeds) {
         assert.deepEqual(usernames, [`mdev--${email}`]);
         assert.deepEqual(passwords, ['intentionally-wrong-password']);
-        assert.equal(submits, 6);
-        assert.equal(incorrectMessages, 5);
-        assert.equal(lockoutMessages, 1);
+        assert.equal(submits, file === 'incorrect-password-lockout' ? 6 : 1);
+        assert.equal(incorrectMessages, file === 'incorrect-password-lockout' ? 5 : 1);
+        assert.equal(lockoutMessages, file === 'incorrect-password-lockout' ? 1 : 0);
       }
     });
   }

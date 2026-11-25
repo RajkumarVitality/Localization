@@ -8,6 +8,7 @@ export const scenarios = {
         provisionMember: true ,
         SNowTestID: 'TEMT0036312'},
   'lockout': { file: 'regression/incorrect-password-lockout.spec.ts', name: '5 Times Incorrect Password Test', provisionMember: true },
+  'incorrect-password-once': { file: 'regression/incorrect-password-once.spec.ts', name: 'Single Incorrect Password Attempt', provisionMember: true },
   'mha-low-risk': { file: 'regression/mha-low-risk.spec.ts', name: 'MHA Low Risk Assessment', provisionMember: true },
   'mha-high-risk': {
     file: 'smoke/mha-high-risk.spec.ts',
@@ -30,11 +31,15 @@ export const suites = {
   ],
   regression: [
     `./tests/${scenarios.lockout.file}`,
+    `./tests/${scenarios['incorrect-password-once'].file}`,
     `./tests/${scenarios['mha-low-risk'].file}`,
     `./tests/${scenarios['mha-privacy-cancel'].file}`,
     `./tests/${scenarios['mha-unanswered'].file}`,
     `./tests/${scenarios['mha-exit-partial'].file}`,
-    `./tests/${scenarios['screening'].file}`
+    `./tests/${scenarios['screening'].file}`,
+    `./tests/${scenarios['reset-password'].file}`,
+    `./tests/${scenarios.loginAndLogout.file}`,
+    `./tests/${scenarios['mha-high-risk'].file}`
   ]
 };
 

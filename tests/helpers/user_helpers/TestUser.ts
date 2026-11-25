@@ -98,10 +98,13 @@ export async function initializeTestAccountsForSpecs(specs: string[]): Promise<v
     if (configuredTenantNumber() !== '9998') throw new Error('Reset password requires tenant 9998 locators.');
     requiredUserCreationSetting('MAILINATOR_API_TOKEN');
   }
-  if (definition.file === scenarios.lockout.file) {
+  if (
+    definition.file === scenarios.lockout.file ||
+    definition.file === scenarios['incorrect-password-once'].file
+  ) {
     const incorrectPassword = requiredSetting('INCORRECT_APP_PASSWORD', 'APP_INCORRECT_PASSWORD');
     if (incorrectPassword === requiredSetting('APP_PASSWORD')) {
-      throw new Error('INCORRECT_APP_PASSWORD must differ from APP_PASSWORD for the lockout test.');
+      throw new Error('INCORRECT_APP_PASSWORD must differ from APP_PASSWORD for incorrect-password scenarios.');
     }
   }
   console.log(`[UserProvisioning] Creating member before mobile session for ${path.basename(specPath)}.`);
